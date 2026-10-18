@@ -31,16 +31,17 @@ import {
 /** Starts a server on the connection the editor asked for (`--stdio`, `--node-ipc` or a socket). */
 export function startServer(connection: Connection = createConnection(ProposedFeatures.all)): void {
   const documents = new TextDocuments(TextDocument);
-  // The last check of each open file, so hover and completion don't check it again.
-  const checked = new Map<string, Checked>();
+  // The last check of each open file and the version it was of, so hover and completion don't
+  // check it again. The version is kept apart because edits change the document in place.
+  const checked = new Map<string, { version: number; checked: Checked }>();
 
   const checkedOf = (uri: string): Checked | undefined => {
     const document = documents.get(uri);
     if (!document) return undefined;
     const last = checked.get(uri);
-    if (last && last.document.version === document.version) return last;
+    if (last && last.version === document.version) return last.checked;
     const next = checkDocument(document);
-    checked.set(uri, next);
+    checked.set(uri, { version: document.version, checked: next });
     return next;
   };
 

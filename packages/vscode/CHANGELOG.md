@@ -1,5 +1,11 @@
 # Changes
 
+## 0.5.1
+
+- Hover help, completion, errors, go to definition and rename follow the file as it's edited.
+  Since 0.1.0 they kept using the file as it was when it was opened, so after an edit they
+  could describe the wrong word, or show errors that had already been fixed.
+
 ## 0.5.0
 
 - Patterns written in GenoCode (GenoCode 0.9): pattern files (`pattern Ripples`) and

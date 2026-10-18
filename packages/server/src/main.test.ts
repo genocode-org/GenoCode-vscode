@@ -118,4 +118,37 @@ describe("the language server", () => {
       },
     ]);
   });
+
+  it("follows edits made in place", async () => {
+    // A line added above the code moves everything after it.
+    client.send({
+      method: "textDocument/didChange",
+      params: {
+        textDocument: { uri: URI, version: 3 },
+        contentChanges: [
+          {
+            range: { start: { line: 1, character: 0 }, end: { line: 1, character: 0 } },
+            text: "let n = floor(nothing)\n",
+          },
+        ],
+      },
+    });
+    const published = await client.wait(
+      (m) =>
+        m.method === "textDocument/publishDiagnostics" &&
+        m.params?.uri === URI &&
+        (m.params.diagnostics ?? []).some((d) => /nothing/.test(d.message)),
+    );
+    expect(published.params?.diagnostics?.length).toBe(1);
+    const hover = (await client.request("textDocument/hover", {
+      textDocument: { uri: URI },
+      position: { line: 3, character: 2 },
+    })) as { contents: { value: string } };
+    expect(hover.contents.value).toContain("forward");
+    const floor = (await client.request("textDocument/hover", {
+      textDocument: { uri: URI },
+      position: { line: 1, character: 9 },
+    })) as { contents: { value: string } };
+    expect(floor.contents.value).toContain("floor(x)");
+  });
 });
