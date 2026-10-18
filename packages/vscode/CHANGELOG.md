@@ -5,6 +5,9 @@
 - Hover help, completion, errors, go to definition and rename follow the file as it's edited.
   Since 0.1.0 they kept using the file as it was when it was opened, so after an edit they
   could describe the wrong word, or show errors that had already been fixed.
+- Help on hover for pattern code: `pattern`, `picture` and `value`, the pixel's `x`, `y`, `r`
+  and `a`, and your own pattern names. Completion inside a pattern block offers the pattern's
+  names, not the creature's.
 
 ## 0.5.0
 
