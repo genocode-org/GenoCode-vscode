@@ -9,6 +9,7 @@ import {
   formatValue,
   geneEdits,
   geneRange,
+  patternOnBall,
   valuesOf,
   type CheckResult,
   type GeneInfo,
@@ -112,20 +113,10 @@ function draw(keepView: boolean): void {
 
 let ball: { text: string; program: CheckResult } | undefined;
 
-/** A creature that's a ball wearing a pattern file's pattern, as the GenoCode app shows it. Its
- * genes have the pattern file's full names, so the controls work on both. */
+/** A pattern file as a ball wearing it, as the GenoCode app shows it. Its genes have the pattern
+ * file's full names, so the controls work on both. */
 function ballWearing(program: CheckResult): CheckResult {
-  if (ball?.text !== program.text) {
-    const { name, items } = program.file;
-    const first = items[0];
-    const body = first ? program.text.slice(first.span.start).trimEnd() : "";
-    const block = body
-      .split("\n")
-      .map((l) => (l ? `  ${l}` : ""))
-      .join("\n");
-    const text = `creature ${name}\n\npattern ${name} {\n${block}\n}\n\nshine 0.3\ntexture pattern(${name}, 200, 1)\nlay\n`;
-    ball = { text: program.text, program: check(text) };
-  }
+  if (ball?.text !== program.text) ball = { text: program.text, program: patternOnBall(program) };
   return ball.program;
 }
 
