@@ -182,6 +182,35 @@ describe("symbols", () => {
   });
 });
 
+describe("symbols of patterns", () => {
+  const file =
+    "pattern Ripples\n\ngene rings = 8 in 2..20\n\nlet lumps = clouds(5, 3)\nvalue picture {\n  value lumps(x, y) * rings\n}\n";
+
+  it("explain the picture functions and offer them in pattern code", () => {
+    const d = doc(file);
+    const h = hover(checkDocument(d), at(d, "clouds", 2));
+    const value = (h?.contents as { value: string }).value;
+    expect(value).toContain("clouds(layers, size)");
+    expect(value).toContain("#187-pictures");
+    const items = completions(checkDocument(d), at(d, "lumps(x"));
+    expect(items.find((i) => i.label === "rings")?.kind).toBe(CompletionItemKind.Field);
+    expect(items.some((i) => i.label === "blur")).toBe(true);
+  });
+
+  it("outlines pattern files and pattern blocks with their genes", () => {
+    const file =
+      "pattern Ripples\n\ngene rings = 8 in 2..20\n\nvalue picture {\n  value r * rings\n}\n";
+    const [root] = symbols(checkDocument(doc(file)));
+    expect([root?.name, root?.detail]).toEqual(["Ripples", "pattern"]);
+    expect(root?.children?.map((s) => s.name)).toEqual(["rings"]);
+    const creature =
+      "creature Shell\n\npattern Ripples {\n  gene rings = 8 in 2..20\n\n  value picture {\n    value r * rings\n  }\n}\n\ntexture pattern(Ripples, 30, 4)\nlay\n";
+    const [shell] = symbols(checkDocument(doc(creature)));
+    const outline = shell?.children?.map((s) => [s.name, s.kind, s.children?.map((c) => c.name)]);
+    expect(outline).toEqual([["Ripples", SymbolKind.Namespace, ["rings"]]]);
+  });
+});
+
 describe("folding", () => {
   it("folds blocks and comments that span lines", () => {
     const lines = FLOWER.split("\n");

@@ -129,7 +129,9 @@ function page(panel: WebviewPanel, extension: Uri): string {
     "default-src 'none'",
     `img-src ${webview.cspSource} data: blob:`,
     `style-src ${webview.cspSource} 'unsafe-inline'`,
-    `script-src 'nonce-${nonce}'`,
+    // 'unsafe-eval' lets patterns written in GenoCode run their per-pixel code as JavaScript;
+    // without it they'd fall back to slower closures. Only the bundled script can run.
+    `script-src 'nonce-${nonce}' 'unsafe-eval'`,
   ].join("; ");
   return `<!doctype html>
 <html lang="en">

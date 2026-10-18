@@ -116,6 +116,23 @@ describe("the grammar", () => {
     expect(scopeOf("let spin = 1", "spin")).toBe("variable.other.declaration");
   });
 
+  it("colours pattern code", () => {
+    expect(colours("pattern Ripples")).toEqual([
+      ["pattern", "storage.type"],
+      ["Ripples", "entity.name.type"],
+    ]);
+    expect(scopeOf("texture pattern(Ripples, 30, 4)", "pattern")).toBe("support.function.builtin");
+    const line = "value picture {";
+    expect(scopeOf(line, "value")).toBe("keyword.control.value");
+    expect(scopeOf(line, "picture")).toBe("storage.type.picture");
+    expect(scopeOf("  value blur(veins, 2)", "blur")).toBe("support.function.builtin");
+    expect(scopeOf("let n = clouds(6, 4)", "clouds")).toBe("support.function.builtin");
+    // Elsewhere they're ordinary names.
+    expect(scopeOf("value = 3", "value")).toBe("source");
+    expect(scopeOf("  value += 1", "value")).toBe("source");
+    expect(scopeOf("forward picture * 2", "picture")).toBe("source");
+  });
+
   it("colours comments across lines, and strings", () => {
     const text = '/* one\ntwo */ forward 1\nprint "a \\"b\\""';
     expect(scopeOf(text, "two")).toBe("comment.block");
@@ -127,7 +144,7 @@ describe("the grammar", () => {
     const reference = fileURLToPath(
       new URL("./", import.meta.resolve("@genocode/core/LANGUAGE.md")),
     );
-    for (const folder of ["creatures", "dances"]) {
+    for (const folder of ["creatures", "dances", "patterns"]) {
       const dir = reference + folder;
       for (const name of readdirSync(dir).filter((f) => f.endsWith(".genie"))) {
         const scopes = colours(readFileSync(`${dir}/${name}`, "utf8")).map(([, s]) => s);

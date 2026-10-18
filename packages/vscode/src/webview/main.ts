@@ -91,17 +91,42 @@ function draw(keepView: boolean): void {
   cancelAnimationFrame(liveFrame);
   if (!shown) return;
   const { program } = shown;
+  const { kind } = program.file;
   const options = { genes: values, inputs: inputs.now() ?? {} };
   const built =
-    program.file.kind === "creature" ? build(program, options) : { shapes: [], diagnostics: [] };
+    kind === "creature"
+      ? build(program, options)
+      : kind === "pattern"
+        ? build(ballWearing(program), options)
+        : { shapes: [], diagnostics: [] };
   view.setCreature(built.shapes, keepView);
-  view.setBackground(buildBackground(program, options).fill);
+  view.setBackground(kind === "pattern" ? undefined : buildBackground(program, options).fill);
   const problem = built.diagnostics[0];
   if (problem) say(problem.message);
-  else if (program.file.kind === "background") say("A background.");
+  else if (kind === "background") say("A background.");
+  else if (kind === "pattern") say("A pattern, on a ball.");
   else say(`${built.shapes.length} shape${built.shapes.length === 1 ? "" : "s"}`);
   const live = program.live || program.backgroundLive;
   if (live && inputs.running) liveFrame = requestAnimationFrame(() => draw(true));
+}
+
+let ball: { text: string; program: CheckResult } | undefined;
+
+/** A creature that's a ball wearing a pattern file's pattern, as the GenoCode app shows it. Its
+ * genes have the pattern file's full names, so the controls work on both. */
+function ballWearing(program: CheckResult): CheckResult {
+  if (ball?.text !== program.text) {
+    const { name, items } = program.file;
+    const first = items[0];
+    const body = first ? program.text.slice(first.span.start).trimEnd() : "";
+    const block = body
+      .split("\n")
+      .map((l) => (l ? `  ${l}` : ""))
+      .join("\n");
+    const text = `creature ${name}\n\npattern ${name} {\n${block}\n}\n\nshine 0.3\ntexture pattern(${name}, 200, 1)\nlay\n`;
+    ball = { text: program.text, program: check(text) };
+  }
+  return ball.program;
 }
 
 function say(text: string): void {
@@ -132,7 +157,13 @@ function showGenes(program: CheckResult, write: boolean): void {
   let group: string | undefined;
   for (const g of program.genes) {
     if (g.section === "dance") continue; // they move the creature to music, not its shape
-    const where = g.section === "background" ? "background" : g.owner;
+    // A pattern file's genes all belong to its pattern, so they aren't grouped.
+    const where =
+      g.section === "background"
+        ? "background"
+        : program.file.kind === "pattern"
+          ? undefined
+          : g.owner;
     if (where !== group && where !== undefined) {
       const row = document.createElement("tr");
       row.className = "group";

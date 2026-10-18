@@ -1,5 +1,16 @@
 # Changes
 
+## 0.5.0
+
+- Patterns written in GenoCode (GenoCode 0.9): pattern files (`pattern Ripples`) and
+  `pattern Ripples { … }` blocks in creatures. `picture`, `value` and the picture functions
+  (`clouds`, `blur`, `zoom_blur`, `stretch`, `power`) are coloured, with help on hover and
+  completion, and patterns appear in the outline with their genes.
+- The preview shows a pattern file as a ball wearing it, with a control for each of its genes, and
+  draws creatures that wear their own patterns.
+- Renaming a pattern renames it in variants' full gene names too, and warns that they change.
+- Help links reach the guide's new sections, such as Lists, Pictures and Your own patterns.
+
 ## 0.4.0
 
 - A live 3D preview beside the editor (GenoCode: Open Preview to the Side, Ctrl+K V, or the

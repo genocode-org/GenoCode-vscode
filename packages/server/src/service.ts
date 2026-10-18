@@ -116,7 +116,8 @@ export function formatting(document: TextDocument): TextEdit[] | undefined {
   return [{ range: rangeOf(document, { start: 0, end: text.length }), newText: formatted }];
 }
 
-/** The outline: the creature, its genes, parts, functions, variants, background and dance. */
+/** The outline: the creature, its genes, parts, functions, patterns, variants, background and
+ * dance. */
 export function symbols({ document, program }: Checked): DocumentSymbol[] {
   const { file } = program;
   const range = (span: Span) => rangeOf(document, span);
@@ -133,8 +134,10 @@ export function symbols({ document, program }: Checked): DocumentSymbol[] {
       .map(geneSymbol);
 
   const children: DocumentSymbol[] = [];
-  const top = file.kind === "creature" ? "creature" : file.kind;
-  for (const g of genesOf(undefined, top)) children.push(g);
+  // A pattern file's genes belong to the pattern it makes (`Ripples.rings`).
+  const top =
+    file.kind === "pattern" ? genesOf(file.name, "pattern") : genesOf(undefined, file.kind);
+  for (const g of top) children.push(g);
   for (const item of file.items) {
     const named = (kind: SymbolKind, inside: DocumentSymbol[] = []): DocumentSymbol | undefined =>
       "nameSpan" in item
@@ -153,6 +156,9 @@ export function symbols({ document, program }: Checked): DocumentSymbol[] {
         break;
       case "Function":
         symbol = named(SymbolKind.Function, genesOf(item.name, "creature"));
+        break;
+      case "Pattern":
+        symbol = named(SymbolKind.Namespace, genesOf(item.name, "pattern"));
         break;
       case "Variant":
         symbol = named(SymbolKind.Constant);

@@ -56,6 +56,19 @@ const EFFECTS = ["morph", "zoom", "spin", "turn", "reverse", "flat"];
 const EFFECT_WORDS = ["follows", "speed", "settle", "amount", "smooth", "on", "off"];
 const TRIGGER_WORDS = ["changes", "drops", "rises"];
 
+/** Pattern code's words (section 14.1). They aren't keywords, so creatures can still use them as
+ * names: `value` is coloured only where it begins a statement, and `picture` only before `{`. */
+const PATTERN_WORDS = [
+  {
+    match: "^\\s*(value)\\b(?=\\s+(?![-+*/]?=(?!=))\\S)",
+    captures: { 1: { name: "keyword.control.value.genocode" } },
+  },
+  {
+    match: "\\b(picture)\\s*(?=\\{)",
+    captures: { 1: { name: "storage.type.picture.genocode" } },
+  },
+];
+
 const words = (list) => `\\b(?:${[...list].sort((a, b) => b.length - a.length).join("|")})\\b`;
 
 /** The grammar, as the JSON VS Code reads. */
@@ -97,8 +110,9 @@ export function grammar() {
       declarations: {
         patterns: [
           {
-            // `creature Star`, `background Night`, `dance Groove`, `variant Spring`
-            match: `\\b(creature|background|dance|variant)\\s+(${NAME})`,
+            // `creature Star`, `background Night`, `dance Groove`, `variant Spring`, `pattern
+            // Ripples` (but not the call `pattern(…)`)
+            match: `\\b(creature|background|dance|variant|pattern)\\s+(${NAME})`,
             captures: {
               1: { name: "storage.type.genocode" },
               2: { name: "entity.name.type.genocode" },
@@ -151,6 +165,7 @@ export function grammar() {
           { include: "#comments" },
           { include: "#strings" },
           { include: "#members" },
+          ...PATTERN_WORDS,
           ...Object.entries(KEYWORD_GROUPS).map(([scope, list]) => ({
             match: words(list),
             name: `${scope}.genocode`,
