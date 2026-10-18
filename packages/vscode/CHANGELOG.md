@@ -1,5 +1,13 @@
 # Changes
 
+## 0.4.0
+
+- A live 3D preview beside the editor (GenoCode: Open Preview to the Side, Ctrl+K V, or the
+  preview button above the editor). It draws the creature as you type and follows the active
+  `.genie` file. Each gene has a control: dragging shows the change at once, and letting go
+  writes the new value into the code. Variants can be shown from a menu, and creatures that read
+  time or music get sliders for them.
+
 ## 0.3.0
 
 - Colour swatches beside colours written out in full (`hsv(…)`, `rgb(…)`, hex colours and

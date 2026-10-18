@@ -1,9 +1,9 @@
 {
   "name": "genocode",
   "displayName": "GenoCode",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "private": true,
-  "description": "GenoCode creatures in VS Code: highlighting, errors as you type, help on hover, completion, outline and formatting for .genie files.",
+  "description": "GenoCode creatures in VS Code: a live 3D preview, highlighting, errors as you type, help on hover, completion, rename, colour pickers, outline and formatting for .genie files.",
   "publisher": "genocode",
   "license": "MIT",
   "type": "module",
@@ -60,15 +60,48 @@
         "editor.tabSize": 2,
         "editor.insertSpaces": true
       }
-    }
+    },
+    "commands": [
+      {
+        "command": "genocode.showPreview",
+        "title": "Open Preview to the Side",
+        "category": "GenoCode",
+        "icon": "$(open-preview)"
+      }
+    ],
+    "menus": {
+      "editor/title": [
+        {
+          "command": "genocode.showPreview",
+          "when": "editorLangId == genocode",
+          "group": "navigation"
+        }
+      ],
+      "commandPalette": [
+        {
+          "command": "genocode.showPreview",
+          "when": "editorLangId == genocode"
+        }
+      ]
+    },
+    "keybindings": [
+      {
+        "command": "genocode.showPreview",
+        "key": "ctrl+k v",
+        "mac": "cmd+k v",
+        "when": "editorLangId == genocode"
+      }
+    ]
   },
   "scripts": {
     "bundle": "node scripts/build.mjs",
     "package": "vsce package --no-dependencies"
   },
   "devDependencies": {
+    "@genocode/controls": "0.1.1",
     "@genocode/core": "0.8.5",
     "@genocode/language-server": "0.0.0",
+    "@genocode/render": "0.8.0",
     "@types/vscode": "1.91.0",
     "@vscode/vsce": "4.0.0",
     "esbuild": "0.28.2",

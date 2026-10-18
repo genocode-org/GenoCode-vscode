@@ -2,6 +2,8 @@
 !dist/extension.cjs
 !dist/server.cjs
 !dist/genocode.tmLanguage.json
+!dist/preview.js
+!dist/preview.css
 !images/**
 !language-configuration.json
 !package.json
