@@ -9,7 +9,7 @@ dance to music. Creature files end in `.genie`.
 - **Colours** for keywords, genes, parts, built-in functions, colour names, numbers and comments.
 - **Errors as you type**, with the same checker the GenoCode app uses.
 - **Help on hover** for every keyword, built-in, gene and part, with a link to its section of the
-  [language guide](https://genocode-org.github.io/GenoCode/language.html).
+  [language guide](https://genocode-org.github.io/GenoCode/docs/language.html).
 - **Completion** of everything in scope: genes, parts, variables, built-ins and keywords, and the
   parts of `music.` and `turtle.`.
 - **Formatting** in GenoCode's standard layout (Format Document, or format on save).

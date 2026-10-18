@@ -1,7 +1,7 @@
 {
   "name": "genocode",
   "displayName": "GenoCode",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "private": true,
   "description": "GenoCode creatures in VS Code: highlighting, errors as you type, help on hover, completion, outline and formatting for .genie files.",
   "publisher": "genocode",
