@@ -1,5 +1,13 @@
 # Changes
 
+## 0.2.0
+
+- Go to definition (F12, or Ctrl+click), find all references (Shift+F12) and highlighting of a
+  name's other uses, for genes, parts, functions and variables.
+- Rename (F2) everywhere, gene names in variants included. Names that are keywords, built in,
+  already used, or that would hide another name are refused. Renaming a gene, or a part with
+  genes, asks first, since other creatures match genes by their full names.
+
 ## 0.1.1
 
 - Hover help links to the language guide where it really is, so the links open the right section.

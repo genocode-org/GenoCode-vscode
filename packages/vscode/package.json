@@ -1,7 +1,7 @@
 {
   "name": "genocode",
   "displayName": "GenoCode",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "private": true,
   "description": "GenoCode creatures in VS Code: highlighting, errors as you type, help on hover, completion, outline and formatting for .genie files.",
   "publisher": "genocode",
@@ -67,7 +67,7 @@
     "package": "vsce package --no-dependencies"
   },
   "devDependencies": {
-    "@genocode/core": "0.8.3",
+    "@genocode/core": "0.8.4",
     "@genocode/language-server": "0.0.0",
     "@types/vscode": "1.91.0",
     "@vscode/vsce": "4.0.0",

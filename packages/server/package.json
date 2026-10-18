@@ -20,7 +20,7 @@
     "dist"
   ],
   "dependencies": {
-    "@genocode/core": "0.8.3",
+    "@genocode/core": "0.8.4",
     "vscode-languageserver": "10.1.2",
     "vscode-languageserver-textdocument": "1.0.15"
   }

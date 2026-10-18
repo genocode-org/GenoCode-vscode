@@ -13,6 +13,8 @@ dance to music. Creature files end in `.genie`.
 - **Completion** of everything in scope: genes, parts, variables, built-ins and keywords, and the
   parts of `music.` and `turtle.`.
 - **Formatting** in GenoCode's standard layout (Format Document, or format on save).
+- **Go to definition, find references and rename** for genes, parts, functions and variables.
+  Renaming a gene asks first, since other creatures match genes by their full names.
 - **Outline** of the creature's genes, parts, functions, variants, background and dance, for the
   Outline view, breadcrumbs and Go to Symbol.
 - **Folding** of blocks and long comments.

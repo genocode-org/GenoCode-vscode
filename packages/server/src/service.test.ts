@@ -1,13 +1,23 @@
-import { CompletionItemKind, DiagnosticSeverity, SymbolKind } from "vscode-languageserver";
+import {
+  CompletionItemKind,
+  DiagnosticSeverity,
+  DocumentHighlightKind,
+  SymbolKind,
+} from "vscode-languageserver";
 import { TextDocument } from "vscode-languageserver-textdocument";
 import { describe, expect, it } from "vitest";
 import {
   checkDocument,
   completions,
+  definition,
   diagnostics,
   foldingRanges,
   formatting,
+  highlights,
   hover,
+  references,
+  renameTarget,
+  renaming,
   symbols,
 } from "./service.js";
 
@@ -178,5 +188,44 @@ describe("folding", () => {
     expect(ranges).toContainEqual([line("part whorl"), line("  lay"), undefined]);
     // A one-line block doesn't fold.
     expect(ranges.some(([s]) => s === line("repeat rings") + 1)).toBe(false);
+  });
+});
+
+describe("names", () => {
+  const d = doc(FLOWER);
+  const c = checkDocument(d);
+  const lines = (ranges: { range: { start: { line: number } } }[]) =>
+    ranges.map((r) => r.range.start.line);
+
+  it("goes to a gene's declaration from a use", () => {
+    expect(definition(c, at(d, "repeat rings", 8))?.range).toEqual({
+      start: { line: 3, character: 5 },
+      end: { line: 3, character: 10 },
+    });
+    expect(definition(c, at(d, "shape"))).toBeNull();
+  });
+
+  it("finds every use, with or without the declaration", () => {
+    expect(lines(references(c, at(d, "whorl(1)"), true))).toEqual([8, 11]);
+    expect(lines(references(c, at(d, "whorl(1)"), false))).toEqual([8]);
+    // The variant sets `rings` too.
+    expect(lines(references(c, at(d, "rings"), true))).toEqual([3, 7, 18]);
+  });
+
+  it("highlights the declaration as written and the uses as read", () => {
+    expect(highlights(c, at(d, "rings")).map((h) => h.kind)).toEqual([
+      DocumentHighlightKind.Write,
+      DocumentHighlightKind.Read,
+      DocumentHighlightKind.Read,
+    ]);
+  });
+
+  it("renames, asking first when a gene's full name changes", () => {
+    expect(renameTarget(c, at(d, "whorl(1)"))?.placeholder).toBe("whorl");
+    expect(renameTarget(c, at(d, "shape"))).toBeUndefined();
+    const part = renaming(c, at(d, "whorl(1)"), "crown");
+    expect("edits" in part && part.edits.map((e) => e.newText)).toEqual(["crown", "crown"]);
+    expect("edits" in part && part.warning).toContain("whorl.petals");
+    expect(renaming(c, at(d, "rings"), "red")).toEqual({ error: "`red` is built in." });
   });
 });

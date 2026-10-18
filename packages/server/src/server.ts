@@ -2,7 +2,9 @@
 
 import {
   createConnection,
+  ErrorCodes,
   ProposedFeatures,
+  ResponseError,
   TextDocuments,
   TextDocumentSyncKind,
   type Connection,
@@ -11,10 +13,15 @@ import { TextDocument } from "vscode-languageserver-textdocument";
 import {
   checkDocument,
   completions,
+  definition,
   diagnostics,
   foldingRanges,
   formatting,
+  highlights,
   hover,
+  references,
+  renameTarget,
+  renaming,
   symbols,
   type Checked,
 } from "./service.js";
@@ -43,6 +50,10 @@ export function startServer(connection: Connection = createConnection(ProposedFe
       documentFormattingProvider: true,
       documentSymbolProvider: { label: "GenoCode" },
       foldingRangeProvider: true,
+      definitionProvider: true,
+      referencesProvider: true,
+      documentHighlightProvider: true,
+      renameProvider: { prepareProvider: true },
     },
     serverInfo: { name: "GenoCode" },
   }));
@@ -81,6 +92,42 @@ export function startServer(connection: Connection = createConnection(ProposedFe
   connection.onFoldingRanges(({ textDocument }) => {
     const document = documents.get(textDocument.uri);
     return document ? foldingRanges(document) : null;
+  });
+
+  connection.onDefinition(({ textDocument, position }) => {
+    const c = checkedOf(textDocument.uri);
+    return c ? definition(c, position) : null;
+  });
+  connection.onReferences(({ textDocument, position, context }) => {
+    const c = checkedOf(textDocument.uri);
+    return c ? references(c, position, context.includeDeclaration) : [];
+  });
+  connection.onDocumentHighlight(({ textDocument, position }) => {
+    const c = checkedOf(textDocument.uri);
+    return c ? highlights(c, position) : [];
+  });
+  connection.onPrepareRename(({ textDocument, position }) => {
+    const c = checkedOf(textDocument.uri);
+    const target = c && renameTarget(c, position);
+    if (!target) {
+      throw new ResponseError(
+        ErrorCodes.InvalidRequest,
+        "Only genes, parts, functions and variables can be renamed.",
+      );
+    }
+    return target;
+  });
+  connection.onRenameRequest(async ({ textDocument, position, newName }) => {
+    const c = checkedOf(textDocument.uri);
+    if (!c) return null;
+    const result = renaming(c, position, newName);
+    if ("error" in result) throw new ResponseError(ErrorCodes.InvalidRequest, result.error);
+    if (result.warning) {
+      const go = "Rename anyway";
+      const answer = await connection.window.showWarningMessage(result.warning, { title: go });
+      if (answer?.title !== go) return null;
+    }
+    return { changes: { [textDocument.uri]: result.edits } };
   });
 
   documents.listen(connection);

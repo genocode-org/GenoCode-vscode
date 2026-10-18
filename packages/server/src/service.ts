@@ -8,6 +8,8 @@ import {
   geneRange,
   helpAt,
   lex,
+  rename,
+  symbolAt,
   type CheckResult,
   type CompletionKind,
   type Diagnostic as CoreDiagnostic,
@@ -18,14 +20,17 @@ import {
 import {
   CompletionItemKind,
   DiagnosticSeverity,
+  DocumentHighlightKind,
   FoldingRangeKind,
   MarkupKind,
   SymbolKind,
   type CompletionItem,
   type Diagnostic,
+  type DocumentHighlight,
   type DocumentSymbol,
   type FoldingRange,
   type Hover,
+  type Location,
   type Position,
   type Range,
   type TextEdit,
@@ -219,4 +224,62 @@ export function foldingRanges(document: TextDocument): FoldingRange[] {
   }
   endRun();
   return out;
+}
+
+/** Where the gene, part, function or variable at `position` is declared. */
+export function definition({ document, program }: Checked, position: Position): Location | null {
+  const uses = symbolAt(program, document.offsetAt(position));
+  return uses ? { uri: document.uri, range: rangeOf(document, uses.declaration) } : null;
+}
+
+/** Every place the name at `position` is used. */
+export function references(
+  { document, program }: Checked,
+  position: Position,
+  includeDeclaration: boolean,
+): Location[] {
+  const uses = symbolAt(program, document.offsetAt(position));
+  if (!uses) return [];
+  return uses.spans
+    .filter((s) => includeDeclaration || s.start !== uses.declaration.start)
+    .map((s) => ({ uri: document.uri, range: rangeOf(document, s) }));
+}
+
+/** The name at `position` and its other uses, to light up while the cursor is on it. */
+export function highlights(
+  { document, program }: Checked,
+  position: Position,
+): DocumentHighlight[] {
+  const uses = symbolAt(program, document.offsetAt(position));
+  if (!uses) return [];
+  return uses.spans.map((s) => ({
+    range: rangeOf(document, s),
+    kind:
+      s.start === uses.declaration.start ? DocumentHighlightKind.Write : DocumentHighlightKind.Read,
+  }));
+}
+
+/** The name that would be renamed at `position`, or undefined if nothing there can be. */
+export function renameTarget(
+  { document, program }: Checked,
+  position: Position,
+): { range: Range; placeholder: string } | undefined {
+  const offset = document.offsetAt(position);
+  const uses = symbolAt(program, offset);
+  const here = uses?.spans.find((s) => s.start <= offset && offset <= s.end);
+  return uses && here ? { range: rangeOf(document, here), placeholder: uses.name } : undefined;
+}
+
+/** The edits that rename the name at `position`, a warning to confirm first, or why it can't be. */
+export function renaming(
+  { document, program }: Checked,
+  position: Position,
+  newName: string,
+): { edits: TextEdit[]; warning: string | undefined } | { error: string } {
+  const result = rename(program, document.offsetAt(position), newName);
+  if ("error" in result) return result;
+  return {
+    edits: result.edits.map((e) => ({ range: rangeOf(document, e.span), newText: e.text })),
+    warning: result.warning,
+  };
 }
