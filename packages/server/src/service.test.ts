@@ -5,9 +5,12 @@ import {
   SymbolKind,
 } from "vscode-languageserver";
 import { TextDocument } from "vscode-languageserver-textdocument";
+import type { Range } from "vscode-languageserver";
 import { describe, expect, it } from "vitest";
 import {
   checkDocument,
+  colourChoices,
+  colours,
   completions,
   definition,
   diagnostics,
@@ -227,5 +230,26 @@ describe("names", () => {
     expect("edits" in part && part.edits.map((e) => e.newText)).toEqual(["crown", "crown"]);
     expect("edits" in part && part.warning).toContain("whorl.petals");
     expect(renaming(c, at(d, "rings"), "red")).toEqual({ error: "`red` is built in." });
+  });
+});
+
+describe("colours", () => {
+  const d = doc("creature A\n\ncolour hsv(30, 1, 1)\ncolour #ff000080\ncolour red\n");
+
+  it("shows a swatch for each colour written out", () => {
+    const found = colours(d);
+    expect(found.map((c) => c.range.start.line)).toEqual([2, 3, 4]);
+    expect(found[0]?.color).toEqual({ red: 1, green: 0.5, blue: 0, alpha: 1 });
+    expect(found[1]?.color.alpha).toBeCloseTo(0.5, 2);
+  });
+
+  it("writes a picked colour its own way first", () => {
+    const [hsvColour, hex, name] = colours(d);
+    const blue = { red: 0, green: 0, blue: 1, alpha: 1 };
+    const labels = (i: { range: Range }) => colourChoices(d, blue, i.range).map((p) => p.label);
+    expect(labels(hsvColour!)).toEqual(["hsv(240, 1, 1)", "rgb(0, 0, 1)", "#0000ff", "blue"]);
+    // The hex colour was written with an alpha, so it keeps one.
+    expect(labels(hex!)[0]).toBe("#0000ffff");
+    expect(labels(name!)[0]).toBe("blue");
   });
 });

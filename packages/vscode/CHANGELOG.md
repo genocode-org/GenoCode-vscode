@@ -1,5 +1,11 @@
 # Changes
 
+## 0.3.0
+
+- Colour swatches beside colours written out in full (`hsv(…)`, `rgb(…)`, hex colours and
+  colour names), with VS Code's colour picker. A picked colour is written back the way the colour
+  was written.
+
 ## 0.2.0
 
 - Go to definition (F12, or Ctrl+click), find all references (Shift+F12) and highlighting of a

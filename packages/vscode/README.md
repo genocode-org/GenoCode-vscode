@@ -15,6 +15,8 @@ dance to music. Creature files end in `.genie`.
 - **Formatting** in GenoCode's standard layout (Format Document, or format on save).
 - **Go to definition, find references and rename** for genes, parts, functions and variables.
   Renaming a gene asks first, since other creatures match genes by their full names.
+- **Colour swatches and a colour picker** beside `hsv(…)`, `rgb(…)`, hex colours and colour
+  names. A picked colour is written back the way it was written.
 - **Outline** of the creature's genes, parts, functions, variants, background and dance, for the
   Outline view, breadcrumbs and Go to Symbol.
 - **Folding** of blocks and long comments.

@@ -12,6 +12,8 @@ import {
 import { TextDocument } from "vscode-languageserver-textdocument";
 import {
   checkDocument,
+  colourChoices,
+  colours,
   completions,
   definition,
   diagnostics,
@@ -54,6 +56,7 @@ export function startServer(connection: Connection = createConnection(ProposedFe
       referencesProvider: true,
       documentHighlightProvider: true,
       renameProvider: { prepareProvider: true },
+      colorProvider: true,
     },
     serverInfo: { name: "GenoCode" },
   }));
@@ -128,6 +131,15 @@ export function startServer(connection: Connection = createConnection(ProposedFe
       if (answer?.title !== go) return null;
     }
     return { changes: { [textDocument.uri]: result.edits } };
+  });
+
+  connection.onDocumentColor(({ textDocument }) => {
+    const document = documents.get(textDocument.uri);
+    return document ? colours(document) : [];
+  });
+  connection.onColorPresentation(({ textDocument, color, range }) => {
+    const document = documents.get(textDocument.uri);
+    return document ? colourChoices(document, color, range) : [];
   });
 
   documents.listen(connection);

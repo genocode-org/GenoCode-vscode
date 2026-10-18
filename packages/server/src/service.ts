@@ -3,14 +3,19 @@
 
 import {
   check,
+  colourLiterals,
   completionsAt,
   formatText,
   geneRange,
   helpAt,
   lex,
   rename,
+  rgb,
   symbolAt,
+  toRgb,
+  writeColour,
   type CheckResult,
+  type ColourForm,
   type CompletionKind,
   type Diagnostic as CoreDiagnostic,
   type GeneInfo,
@@ -18,6 +23,9 @@ import {
   type Stmt,
 } from "@genocode/core";
 import {
+  type Color,
+  type ColorInformation,
+  type ColorPresentation,
   CompletionItemKind,
   DiagnosticSeverity,
   DocumentHighlightKind,
@@ -282,4 +290,33 @@ export function renaming(
     edits: result.edits.map((e) => ({ range: rangeOf(document, e.span), newText: e.text })),
     warning: result.warning,
   };
+}
+
+/** The colours written out in the file, for swatches beside them. */
+export function colours(document: TextDocument): ColorInformation[] {
+  return colourLiterals(document.getText()).map((c) => {
+    const [red, green, blue] = toRgb(c.colour);
+    return { range: rangeOf(document, c.span), color: { red, green, blue, alpha: c.colour.a } };
+  });
+}
+
+const FORMS: ColourForm[] = ["hsv", "rgb", "hex", "name"];
+
+/** A colour picked for the colour at `range`, written each way it can be, its own way first. */
+export function colourChoices(
+  document: TextDocument,
+  color: Color,
+  range: Range,
+): ColorPresentation[] {
+  const start = document.offsetAt(range.start);
+  const literal = colourLiterals(document.getText()).find((c) => c.span.start === start);
+  const picked = rgb(color.red, color.green, color.blue, color.alpha);
+  const first = literal?.form ?? "hsv";
+  const out: ColorPresentation[] = [];
+  for (const form of [first, ...FORMS.filter((f) => f !== first)]) {
+    const text = writeColour(picked, form, form === first && literal?.alpha === true);
+    if (text && !out.some((p) => p.label === text))
+      out.push({ label: text, textEdit: { range, newText: text } });
+  }
+  return out;
 }
