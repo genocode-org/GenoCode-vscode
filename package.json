@@ -11,14 +11,16 @@
     "node": ">=22"
   },
   "scripts": {
-    "build": "tsc -b",
+    "build": "tsc -b && npm run bundle -w genocode",
     "clean": "tsc -b --clean",
     "typecheck": "tsc -p tsconfig.tests.json",
     "test": "vitest run",
     "test:watch": "vitest",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "check": "npm run build && npm run typecheck && npm run test && npm run format:check"
+    "check": "npm run build && npm run typecheck && npm run test && npm run format:check",
+    "sections": "node packages/server/scripts/sections.mjs",
+    "package": "npm run build && npm run package -w genocode"
   },
   "devDependencies": {
     "@types/node": "^26.6.5",

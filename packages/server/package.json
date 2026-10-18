@@ -1,0 +1,27 @@
+{
+  "name": "@genocode/language-server",
+  "version": "0.0.0",
+  "private": true,
+  "description": "The GenoCode language server: errors, hover help, completion, outline and formatting for .genie files.",
+  "license": "MIT",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "bin": {
+    "genie-language-server": "./dist/main.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "dependencies": {
+    "@genocode/core": "0.8.3",
+    "vscode-languageserver": "10.1.2",
+    "vscode-languageserver-textdocument": "1.0.15"
+  }
+}

@@ -1,0 +1,10 @@
+**
+!dist/extension.cjs
+!dist/server.cjs
+!dist/genocode.tmLanguage.json
+!images/**
+!language-configuration.json
+!package.json
+!README.md
+!CHANGELOG.md
+!LICENSE

@@ -1,22 +1,80 @@
 {
-  "name": "@genocode/vscode",
-  "version": "0.0.0",
+  "name": "genocode",
+  "displayName": "GenoCode",
+  "version": "0.1.0",
   "private": true,
-  "description": "VS Code extension and language server for GenoCode.",
+  "description": "GenoCode creatures in VS Code: highlighting, errors as you type, help on hover, completion, outline and formatting for .genie files.",
+  "publisher": "genocode",
   "license": "MIT",
   "type": "module",
-  "main": "./dist/index.js",
-  "types": "./dist/index.d.ts",
-  "exports": {
-    ".": {
-      "types": "./dist/index.d.ts",
-      "default": "./dist/index.js"
+  "icon": "images/icon.png",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/genocode-org/GenoCode-vscode.git",
+    "directory": "packages/vscode"
+  },
+  "homepage": "https://genocode-org.github.io/GenoCode/",
+  "bugs": "https://github.com/genocode-org/GenoCode-vscode/issues",
+  "categories": [
+    "Programming Languages",
+    "Formatters"
+  ],
+  "keywords": [
+    "genocode",
+    "genie",
+    "creatures",
+    "generative art",
+    "turtle"
+  ],
+  "engines": {
+    "vscode": "^1.91.0"
+  },
+  "main": "./dist/extension.cjs",
+  "contributes": {
+    "languages": [
+      {
+        "id": "genocode",
+        "aliases": [
+          "GenoCode",
+          "genie"
+        ],
+        "extensions": [
+          ".genie"
+        ],
+        "configuration": "./language-configuration.json",
+        "icon": {
+          "light": "./images/file.svg",
+          "dark": "./images/file.svg"
+        }
+      }
+    ],
+    "grammars": [
+      {
+        "language": "genocode",
+        "scopeName": "source.genocode",
+        "path": "./dist/genocode.tmLanguage.json"
+      }
+    ],
+    "configurationDefaults": {
+      "[genocode]": {
+        "editor.tabSize": 2,
+        "editor.insertSpaces": true
+      }
     }
   },
-  "files": [
-    "dist"
-  ],
-  "dependencies": {
-    "@genocode/core": "0.1.0"
+  "scripts": {
+    "bundle": "node scripts/build.mjs",
+    "package": "vsce package --no-dependencies"
+  },
+  "devDependencies": {
+    "@genocode/core": "0.8.3",
+    "@genocode/language-server": "0.0.0",
+    "@types/vscode": "1.91.0",
+    "@vscode/vsce": "4.0.0",
+    "esbuild": "0.28.2",
+    "ovsx": "1.3.0",
+    "vscode-languageclient": "10.1.2",
+    "vscode-oniguruma": "2.0.1",
+    "vscode-textmate": "9.3.2"
   }
 }

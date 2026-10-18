@@ -7,5 +7,5 @@
     "declarationMap": false,
     "types": ["node"]
   },
-  "include": ["packages/vscode/src"]
+  "include": ["packages/*/src"]
 }
