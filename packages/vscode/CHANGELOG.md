@@ -1,5 +1,13 @@
 # Changes
 
+## 0.6.0
+
+- The preview edits variants. While a variant is shown, moving a gene's control writes the new
+  value into the variant's block, adding a line for a gene it didn't set. The genes the variant
+  sets itself are marked, and ↺ takes one back to the creature's own value.
+- The preview follows the cursor: in a variant's block it shows that variant, and on a gene's line
+  the creature itself. Picking a variant in the preview's menu moves the cursor to its block.
+
 ## 0.5.2
 
 - Uses GenoCode 0.9.4. The preview's ball for pattern files now comes from GenoCode itself, the

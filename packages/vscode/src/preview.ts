@@ -5,6 +5,8 @@
 import {
   Disposable,
   Range,
+  Selection,
+  TextEditorRevealType,
   Uri,
   ViewColumn,
   window,
@@ -18,7 +20,8 @@ import {
 /** What the panel sends. */
 type FromPanel =
   | { type: "ready" }
-  | { type: "edit"; version: number; edits: { start: number; end: number; text: string }[] };
+  | { type: "edit"; version: number; edits: { start: number; end: number; text: string }[] }
+  | { type: "reveal"; version: number; at: number };
 
 const isGenie = (d: TextDocument) => d.languageId === "genocode";
 
@@ -66,6 +69,13 @@ export class Preview {
       window.onDidChangeActiveTextEditor((editor) => {
         if (editor && isGenie(editor.document)) this.follow(editor.document);
       }),
+      // The panel shows the variant whose block the cursor is in.
+      window.onDidChangeTextEditorSelection((e) => {
+        const doc = e.textEditor.document;
+        if (doc !== this.document) return;
+        const at = doc.offsetAt(e.selections[0]!.active);
+        void this.panel.webview.postMessage({ type: "cursor", at, version: doc.version });
+      }),
     );
   }
 
@@ -99,6 +109,15 @@ export class Preview {
   private async receive(m: FromPanel): Promise<void> {
     if (m.type === "ready") {
       this.send();
+      return;
+    }
+    if (m.type === "reveal") {
+      // A variant picked in the panel: its block is shown in the editor, which keeps its focus.
+      const editor = window.visibleTextEditors.find((e) => e.document === this.document);
+      if (!editor || m.version !== this.document.version) return;
+      const at = this.document.positionAt(m.at);
+      editor.selection = new Selection(at, at);
+      editor.revealRange(new Range(at, at), TextEditorRevealType.InCenterIfOutsideViewport);
       return;
     }
     // Edits are for the text the panel was sent; if it has changed since, they'd land wrongly.

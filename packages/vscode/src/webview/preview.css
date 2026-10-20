@@ -119,6 +119,26 @@ button:hover {
   font-size: 0.9em;
 }
 
+/* With a variant on show: the genes it sets itself, and those it takes from the creature. */
+#genes tr.own td.name {
+  color: var(--vscode-textLink-foreground);
+}
+
+#genes tr.inherited td.name,
+#genes tr.inherited td.value {
+  opacity: 0.6;
+}
+
+#genes button.reset {
+  padding: 0 4px 0 0;
+  background: none;
+  color: var(--vscode-descriptionForeground);
+}
+
+#genes button.reset:hover {
+  color: var(--vscode-foreground);
+}
+
 #genes tr.group td {
   padding-top: 10px;
   font-weight: 600;

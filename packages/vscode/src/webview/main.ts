@@ -1,6 +1,7 @@
 // The preview panel's page: checks the text it's sent, builds the creature with @genocode/core and
 // draws it with @genocode/render, as the GenoCode app's View does. Moving a gene's control shows
-// the new value at once; letting go writes it into the code.
+// the new value at once; letting go writes it into the code: into the gene's line, or into the
+// variant's block while a variant is shown. The cursor in a variant's block shows that variant.
 
 import {
   build,
@@ -11,6 +12,7 @@ import {
   geneRange,
   patternOnBall,
   valuesOf,
+  variantEdits,
   type CheckResult,
   type GeneInfo,
   type Value,
@@ -39,17 +41,47 @@ let values = new Map<string, Value>();
 let variant = "";
 let liveFrame = 0;
 
-window.addEventListener(
-  "message",
-  (e: MessageEvent<{ type: string; text: string; version: number }>) => {
-    if (e.data.type === "show") show(e.data.text, e.data.version);
-  },
-);
+/** What the extension sends: the text to show, or where the cursor has moved to. */
+type FromExtension =
+  { type: "show"; text: string; version: number } | { type: "cursor"; at: number; version: number };
+
+window.addEventListener("message", (e: MessageEvent<FromExtension>) => {
+  if (e.data.type === "show") show(e.data.text, e.data.version);
+  if (e.data.type === "cursor") cursorMoved(e.data.at, e.data.version);
+});
 $("reset").addEventListener("click", () => view.resetView());
 variantMenu.addEventListener("change", () => {
   variant = variantMenu.value;
-  if (shown) choose(shown.program);
+  if (!shown) return;
+  choose(shown.program);
+  // The code's cursor goes to the variant's block, or to the creature's first gene.
+  const { program, version } = shown;
+  const at =
+    variant === ""
+      ? program.genes.find((g) => g.decl)?.decl?.span.start
+      : program.variants.find((v) => v.name === variant)?.decl.nameSpan.end;
+  if (at !== undefined) vscode.postMessage({ type: "reveal", version, at });
 });
+
+/**
+ * The cursor in a variant's block shows that variant; on a gene's line, the creature itself.
+ * Anywhere else, what's on show stays, so the drawing code can be changed while a variant is shown.
+ */
+function cursorMoved(at: number, version: number): void {
+  if (!shown || shown.version !== version) return;
+  const { program } = shown;
+  const inside = (span: { start: number; end: number }) => span.start <= at && at <= span.end;
+  const found = program.variants.find((v) => inside(v.decl.span));
+  const next = found
+    ? found.name
+    : program.genes.some((g) => g.decl && inside(g.decl.span))
+      ? ""
+      : variant;
+  if (next === variant) return;
+  variant = next;
+  variantMenu.value = variant;
+  choose(program);
+}
 vscode.postMessage({ type: "ready" });
 
 function show(text: string, version: number): void {
@@ -68,7 +100,7 @@ function show(text: string, version: number): void {
   shown = { program, version };
   if (!program.variants.some((v) => v.name === variant)) variant = "";
   variantMenu.replaceChildren(
-    new Option("As written", ""),
+    new Option(`${program.file.name || "The creature"} itself`, ""),
     ...program.variants.map((v) => new Option(v.name, v.name)),
   );
   variantMenu.value = variant;
@@ -81,8 +113,8 @@ function choose(program: CheckResult, first = false): void {
   const v = program.variants.find((x) => x.name === variant);
   values = valuesOf(program.genes, v?.values);
   note.hidden = v === undefined;
-  note.textContent = "Showing a variant: changes here aren't written into the code.";
-  showGenes(program, v === undefined);
+  note.textContent = `Showing ${variant}: changes are written into its block. Its own genes are marked; ↺ puts one back to the creature's value.`;
+  showGenes(program);
   inputs.show(program.live || program.backgroundLive);
   draw(!first);
 }
@@ -124,7 +156,12 @@ function say(text: string): void {
   status.textContent = text;
 }
 
-const editing = (write: boolean): GeneEditing => ({
+/** Sends edits for the text on show to the extension, which applies them to the file. */
+function write(edits: { start: number; end: number; text: string }[]): void {
+  if (shown) vscode.postMessage({ type: "edit", version: shown.version, edits });
+}
+
+const editing: GeneEditing = {
   input(g, v) {
     values.set(g.fullName, v);
     showValue(g, v);
@@ -134,16 +171,20 @@ const editing = (write: boolean): GeneEditing => ({
     values.set(g.fullName, v);
     showValue(g, v);
     draw(true);
-    if (write && shown) {
-      const edits = geneEdits(shown.program, new Map([[g.fullName, v]]));
-      vscode.postMessage({ type: "edit", version: shown.version, edits });
-    }
+    if (!shown) return;
+    const changed = new Map([[g.fullName, v]]);
+    write(
+      variant === ""
+        ? geneEdits(shown.program, changed)
+        : variantEdits(shown.program, variant, changed),
+    );
   },
-});
+};
 
 /** The genes, grouped by where they're declared, each with a control and its value. */
-function showGenes(program: CheckResult, write: boolean): void {
-  const edit = editing(write);
+function showGenes(program: CheckResult): void {
+  // A variant's own genes stand out; the rest are the creature's.
+  const own = program.variants.find((v) => v.name === variant)?.values;
   const rows: HTMLTableRowElement[] = [];
   let group: string | undefined;
   for (const g of program.genes) {
@@ -166,13 +207,24 @@ function showGenes(program: CheckResult, write: boolean): void {
     group = where;
     const row = document.createElement("tr");
     row.dataset.gene = g.fullName;
+    if (own) row.className = own.has(g.fullName) ? "own" : "inherited";
     const name = row.insertCell();
     name.className = "name";
     name.textContent = g.name;
     name.title = [g.description, geneRange(g)].filter(Boolean).join(" · ");
+    if (own?.has(g.fullName)) {
+      const reset = document.createElement("button");
+      reset.className = "reset";
+      reset.textContent = "↺";
+      reset.title = "Back to the creature's own value";
+      reset.addEventListener("click", () => {
+        if (shown) write(variantEdits(shown.program, variant, new Map(), [g.fullName]));
+      });
+      name.prepend(reset);
+    }
     const control = row.insertCell();
     const value = values.get(g.fullName) ?? g.value;
-    const element = geneControl(g, value, edit);
+    const element = geneControl(g, value, editing);
     if (element) control.append(element);
     const text = row.insertCell();
     text.className = "value";
