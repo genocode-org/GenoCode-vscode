@@ -1,5 +1,10 @@
 # Changes
 
+## 0.5.2
+
+- Uses GenoCode 0.9.4. The preview's ball for pattern files now comes from GenoCode itself, the
+  same one the app and the command line draw. Nothing you see changes.
+
 ## 0.5.1
 
 - Hover help, completion, errors, go to definition and rename follow the file as it's edited.
