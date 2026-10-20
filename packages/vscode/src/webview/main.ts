@@ -18,7 +18,7 @@ import {
   type Value,
 } from "@genocode/core";
 import { geneControl, InputControls, type GeneEditing } from "@genocode/controls";
-import { CreatureView } from "@genocode/render";
+import { CreatureView, type Side } from "@genocode/render";
 
 interface VsCodeApi {
   postMessage(message: unknown): void;
@@ -40,6 +40,9 @@ let shown: { program: CheckResult; version: number } | undefined;
 let values = new Map<string, Value>();
 let variant = "";
 let liveFrame = 0;
+/** The side the creature was last looked at from, to frame each variant from; none for the
+ * usual view. */
+let side: Side | undefined;
 
 /** What the extension sends: the text to show, or where the cursor has moved to. */
 type FromExtension =
@@ -49,11 +52,20 @@ window.addEventListener("message", (e: MessageEvent<FromExtension>) => {
   if (e.data.type === "show") show(e.data.text, e.data.version);
   if (e.data.type === "cursor") cursorMoved(e.data.at, e.data.version);
 });
-$("reset").addEventListener("click", () => view.resetView());
+$("reset").addEventListener("click", () => {
+  side = undefined;
+  view.resetView();
+});
+for (const b of document.querySelectorAll<HTMLButtonElement>("[data-side]")) {
+  b.addEventListener("click", () => {
+    side = b.dataset["side"] as Side;
+    view.viewFrom(side);
+  });
+}
 variantMenu.addEventListener("change", () => {
   variant = variantMenu.value;
   if (!shown) return;
-  choose(shown.program);
+  choose(shown.program, true);
   // The code's cursor goes to the variant's block, or to the creature's first gene.
   const { program, version } = shown;
   const at =
@@ -80,7 +92,7 @@ function cursorMoved(at: number, version: number): void {
   if (next === variant) return;
   variant = next;
   variantMenu.value = variant;
-  choose(program);
+  choose(program, true);
 }
 vscode.postMessage({ type: "ready" });
 
@@ -108,15 +120,18 @@ function show(text: string, version: number): void {
   choose(program, first);
 }
 
-/** Shows the creature with its own genes, or a variant's. */
-function choose(program: CheckResult, first = false): void {
+/**
+ * Shows the creature with its own genes, or a variant's. With `reframe`, the camera frames it
+ * afresh, as when another variant is picked; otherwise it stays where it is.
+ */
+function choose(program: CheckResult, reframe = false): void {
   const v = program.variants.find((x) => x.name === variant);
   values = valuesOf(program.genes, v?.values);
   note.hidden = v === undefined;
   note.textContent = `Showing ${variant}: changes are written into its block. Its own genes are marked; ↺ puts one back to the creature's value.`;
   showGenes(program);
   inputs.show(program.live || program.backgroundLive);
-  draw(!first);
+  draw(!reframe);
 }
 
 /** Draws the creature; creatures that read time are drawn again every frame while it runs. */
@@ -133,6 +148,7 @@ function draw(keepView: boolean): void {
         ? build(ballWearing(program), options)
         : { shapes: [], diagnostics: [] };
   view.setCreature(built.shapes, keepView);
+  if (!keepView && side) view.viewFrom(side);
   view.setBackground(kind === "pattern" ? undefined : buildBackground(program, options).fill);
   const problem = built.diagnostics[0];
   if (problem) say(problem.message);

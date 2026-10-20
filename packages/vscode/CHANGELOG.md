@@ -7,6 +7,8 @@
   sets itself are marked, and ↺ takes one back to the creature's own value.
 - The preview follows the cursor: in a variant's block it shows that variant, and on a gene's line
   the creature itself. Picking a variant in the preview's menu moves the cursor to its block.
+- Front, Back, Left, Right, Top and Bottom buttons in the preview, as in the app. Picking another
+  variant frames it afresh, from the side last chosen, instead of keeping the last one's zoom.
 
 ## 0.5.2
 

@@ -161,7 +161,18 @@ function page(panel: WebviewPanel, extension: Uri): string {
 <link rel="stylesheet" href="${asset("preview.css")}">
 </head>
 <body>
-<main id="view"><canvas id="canvas"></canvas><p id="status"></p></main>
+<main id="view">
+  <canvas id="canvas"></canvas>
+  <p id="status"></p>
+  <div id="views" role="toolbar" aria-label="Look from">
+    <button data-side="front" title="Front">Front</button>
+    <button data-side="back" title="Back">Back</button>
+    <button data-side="left" title="Left side">Left</button>
+    <button data-side="right" title="Right side">Right</button>
+    <button data-side="top" title="Top">Top</button>
+    <button data-side="bottom" title="Bottom">Bottom</button>
+  </div>
+</main>
 <aside id="panel">
   <div id="bar">
     <select id="variant" title="Which variant to show"></select>

@@ -35,6 +35,29 @@ body {
   height: 100%;
 }
 
+/* Buttons to look at the creature from each side, faint until the mouse is over them. */
+#views {
+  position: absolute;
+  right: 8px;
+  bottom: 8px;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 4px;
+  opacity: 0.6;
+  transition: opacity 0.2s;
+}
+
+#views:hover,
+#views:focus-within {
+  opacity: 1;
+}
+
+#views button {
+  padding: 2px 6px;
+  font-size: 0.9em;
+}
+
 #status {
   position: absolute;
   left: 8px;
