@@ -1,5 +1,10 @@
 # Changes
 
+## 0.6.1
+
+- Uses GenoCode 0.10.0. The new `breed off` line (a creature whose children don't keep its look)
+  is coloured, explained on hover and checked.
+
 ## 0.6.0
 
 - The preview edits variants. While a variant is shown, moving a gene's control writes the new

@@ -18,7 +18,17 @@ const NAME = "[\\p{L}_][\\p{L}\\p{N}_]*";
 
 /** The keywords, by what they do. Every keyword must be in exactly one group (grammar.test.ts). */
 export const KEYWORD_GROUPS = {
-  "storage.type": ["creature", "gene", "part", "function", "let", "variant", "background", "dance"],
+  "storage.type": [
+    "creature",
+    "gene",
+    "part",
+    "function",
+    "let",
+    "variant",
+    "background",
+    "dance",
+    "breed",
+  ],
   "keyword.control": ["if", "else", "repeat", "for", "while", "return"],
   "keyword.other": ["as", "from", "to", "by", "in", "step", "log", "at"],
   "keyword.other.command": [
