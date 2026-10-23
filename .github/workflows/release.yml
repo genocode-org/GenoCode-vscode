@@ -13,9 +13,10 @@ name: Release
 #   1. In the Azure portal, Microsoft Entra ID > App registrations > New registration (this
 #      directory only). No Azure subscription is needed. Note its client and tenant IDs.
 #   2. In the app, Certificates & secrets > Federated credentials > Add: "GitHub Actions deploying
-#      Azure resources", organisation genocode-org, repository GenoCode-vscode, entity type
-#      Environment, name `marketplace`. Its subject is
-#      repo:genocode-org/GenoCode-vscode:environment:marketplace.
+#      Azure resources", organisation genocode-org (ID 343121007), repository GenoCode-vscode
+#      (ID 1421088156), entity type Environment, name `marketplace`. GitHub's subjects for this
+#      repository include those IDs, so the subject is
+#      repo:genocode-org@343121007/GenoCode-vscode@1421088156:environment:marketplace.
 #   3. In this repository's `marketplace` environment, add the variables AZURE_CLIENT_ID and
 #      AZURE_TENANT_ID. They name the app; they aren't secrets.
 #   4. Run this workflow by hand (Actions > Release > Run workflow). It only signs in, prints the
