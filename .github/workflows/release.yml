@@ -4,20 +4,47 @@ name: Release
 # v0.1.0) is pushed. The tag must match the version in packages/vscode/package.json. The .vsix is
 # also attached to a GitHub release, for people who install it by hand.
 #
-# Needs two repository secrets: VSCE_PAT, an Azure DevOps token with the Marketplace (Manage)
-# scope for the `genocode` publisher, and OVSX_PAT, an Open VSX token for the `genocode`
-# namespace.
+# The Marketplace is signed in to with Microsoft Entra ID, with no token kept: GitHub's OIDC token
+# is exchanged for one of an Entra ID app registration, which is a Contributor of the `genocode`
+# publisher. Open VSX still uses a token, the repository secret OVSX_PAT (for the `genocode`
+# namespace).
+#
+# Setting up the Marketplace sign-in, once:
+#   1. In the Azure portal, Microsoft Entra ID > App registrations > New registration (this
+#      directory only). No Azure subscription is needed. Note its client and tenant IDs.
+#   2. In the app, Certificates & secrets > Federated credentials > Add: "GitHub Actions deploying
+#      Azure resources", organisation genocode-org (ID 343121007), repository GenoCode-vscode
+#      (ID 1421088156), entity type Environment, name `marketplace`. GitHub's subjects for this
+#      repository include those IDs, so the subject is
+#      repo:genocode-org@343121007/GenoCode-vscode@1421088156:environment:marketplace.
+#   3. In this repository's `marketplace` environment, add the variables AZURE_CLIENT_ID and
+#      AZURE_TENANT_ID. They name the app; they aren't secrets.
+#   4. Run this workflow by hand (Actions > Release > Run workflow). It only signs in, prints the
+#      app's Marketplace id and checks it may publish, which fails until step 5.
+#   5. On https://marketplace.visualstudio.com/manage/publishers/genocode, Members > Add: that id,
+#      as Contributor. Run the workflow by hand again: the check passes.
+# If the app signs in but can't publish (InvalidAccessException), use a user-assigned managed
+# identity instead of the app registration, with the same federated credential; it needs an Azure
+# subscription.
 
 on:
   push:
     tags: ["v*"]
+  workflow_dispatch:
 
 permissions:
   contents: write
+  # For azure/login to exchange GitHub's OIDC token for an Entra ID one.
+  id-token: write
 
 jobs:
   publish:
     runs-on: ubuntu-latest
+    # The app's federated credential trusts this environment only. It allows `main` (for runs by
+    # hand) and `v*` tags.
+    environment: marketplace
+    env:
+      RELEASE: ${{ github.event_name == 'push' }}
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v7
@@ -25,7 +52,23 @@ jobs:
           node-version-file: .nvmrc
           cache: npm
       - run: npm ci
+      - name: Sign in to Microsoft Entra ID
+        uses: azure/login@v3
+        with:
+          client-id: ${{ vars.AZURE_CLIENT_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          # The Marketplace token belongs to the tenant, so there's no subscription to sign in to.
+          allow-no-subscriptions: true
+      - name: Show the id to add to the publisher's members
+        if: env.RELEASE != 'true'
+        run: |
+          az rest -u https://app.vssps.visualstudio.com/_apis/connectionData \
+            --resource 499b84ac-1321-427f-aa17-267ca6975798 \
+            --query "authenticatedUser.{id: id, name: providerDisplayName}"
+      - name: Check that it may publish as genocode
+        run: npx -w genocode vsce verify-pat --azure-credential genocode
       - name: Check that the tag matches the extension's version
+        if: env.RELEASE == 'true'
         run: |
           version=$(node -p "require('./packages/vscode/package.json').version")
           if [ "v$version" != "$GITHUB_REF_NAME" ]; then
@@ -33,17 +76,20 @@ jobs:
             exit 1
           fi
           echo "VSIX=packages/vscode/genocode-$version.vsix" >> "$GITHUB_ENV"
-      - run: npm run check
-      - run: npm run package
+      - if: env.RELEASE == 'true'
+        run: npm run check
+      - if: env.RELEASE == 'true'
+        run: npm run package
       - name: Publish to the VS Code Marketplace
-        run: npx -w genocode vsce publish --packagePath "$GITHUB_WORKSPACE/$VSIX"
-        env:
-          VSCE_PAT: ${{ secrets.VSCE_PAT }}
+        if: env.RELEASE == 'true'
+        run: npx -w genocode vsce publish --azure-credential --packagePath "$GITHUB_WORKSPACE/$VSIX"
       - name: Publish to Open VSX
+        if: env.RELEASE == 'true'
         run: npx -w genocode ovsx publish "$GITHUB_WORKSPACE/$VSIX"
         env:
           OVSX_PAT: ${{ secrets.OVSX_PAT }}
       - name: Attach the .vsix to a GitHub release
+        if: env.RELEASE == 'true'
         run: gh release create "$GITHUB_REF_NAME" "$VSIX" --title "$GITHUB_REF_NAME" --notes-file packages/vscode/CHANGELOG.md
         env:
           GH_TOKEN: ${{ github.token }}
