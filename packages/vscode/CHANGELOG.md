@@ -1,5 +1,14 @@
 # Changes
 
+## 0.7.0
+
+- The preview has the GenoCode app's new look, in your theme's colours. The creature fills its
+  side, with its name on a small card at the top left. The six side buttons are now one camera
+  button with a **Look from** menu and **Start the view again** (which replaces Reset view).
+- The variant menu floats in a bar under the creature, shown only for creatures with variants.
+- The genes have a count in their heading, show a long value in full on hover, and fold the time
+  and music sliders under **Try inputs**.
+
 ## 0.6.2
 
 - Uses GenoCode 0.10.1: corrected language guide, a clearer message when a pattern block uses
