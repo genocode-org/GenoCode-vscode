@@ -62,6 +62,36 @@ for (const b of document.querySelectorAll<HTMLButtonElement>("[data-side]")) {
     view.viewFrom(side);
   });
 }
+
+// The camera button's menu: choosing a side closes it, as do a click elsewhere and Esc.
+const camera = $("camera");
+const cameraMenu = $("camera-menu");
+function openCamera(open: boolean): void {
+  cameraMenu.hidden = !open;
+  camera.setAttribute("aria-expanded", String(open));
+  if (open) cameraMenu.querySelector<HTMLButtonElement>("button")?.focus();
+}
+camera.addEventListener("click", () => openCamera(cameraMenu.hasAttribute("hidden")));
+cameraMenu.addEventListener("click", (e) => {
+  if ((e.target as HTMLElement).closest("[role=menuitem]")) openCamera(false);
+});
+document.addEventListener("pointerdown", (e) => {
+  const target = e.target as Node;
+  if (!cameraMenu.hidden && !cameraMenu.contains(target) && !camera.contains(target)) {
+    openCamera(false);
+  }
+});
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape" && !cameraMenu.hidden) {
+    openCamera(false);
+    camera.focus();
+  }
+});
+
+$("inputs-toggle").addEventListener("click", () => {
+  const open = $("inputs").classList.toggle("open");
+  $("inputs-toggle").setAttribute("aria-expanded", String(open));
+});
 variantMenu.addEventListener("change", () => {
   variant = variantMenu.value;
   if (!shown) return;
@@ -116,7 +146,7 @@ function show(text: string, version: number): void {
     ...program.variants.map((v) => new Option(v.name, v.name)),
   );
   variantMenu.value = variant;
-  variantMenu.hidden = program.variants.length === 0;
+  $("bar").hidden = program.variants.length === 0;
   choose(program, first);
 }
 
@@ -127,6 +157,7 @@ function show(text: string, version: number): void {
 function choose(program: CheckResult, reframe = false): void {
   const v = program.variants.find((x) => x.name === variant);
   values = valuesOf(program.genes, v?.values);
+  $("name").textContent = `${program.file.name || "Untitled"}${v ? ` · ${v.name}` : ""}`;
   note.hidden = v === undefined;
   note.textContent = `Showing ${variant}: changes are written into its block. Its own genes are marked; ↺ puts one back to the creature's value.`;
   showGenes(program);
@@ -244,13 +275,15 @@ function showGenes(program: CheckResult): void {
     if (element) control.append(element);
     const text = row.insertCell();
     text.className = "value";
-    text.textContent = formatValue(value);
+    text.textContent = text.title = formatValue(value);
     rows.push(row);
   }
   genes.replaceChildren(...rows);
+  const count = program.genes.filter((g) => g.section !== "dance").length;
+  $("gene-count").textContent = count > 0 ? String(count) : "";
 }
 
 function showValue(g: GeneInfo, v: Value): void {
-  const cell = genes.querySelector(`tr[data-gene="${CSS.escape(g.fullName)}"] .value`);
-  if (cell) cell.textContent = formatValue(v);
+  const cell = genes.querySelector<HTMLElement>(`tr[data-gene="${CSS.escape(g.fullName)}"] .value`);
+  if (cell) cell.textContent = cell.title = formatValue(v);
 }
