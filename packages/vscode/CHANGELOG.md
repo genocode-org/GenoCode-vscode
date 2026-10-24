@@ -4,6 +4,7 @@
 
 - Uses GenoCode 0.10.1: corrected language guide, a clearer message when a pattern block uses
   something from outside it, and new Marbled (Flowerball) and Swirled (Starfish) variants.
+- Help links and the README point at GenoCode's new address, https://genocode.piorek.co.za/.
 
 ## 0.6.1
 
