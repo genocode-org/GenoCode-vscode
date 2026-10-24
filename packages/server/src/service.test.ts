@@ -80,9 +80,7 @@ describe("hover", () => {
     const h = hover(checkDocument(d), at(d, "clamp", 2));
     const value = (h?.contents as { value: string }).value;
     expect(value).toContain("clamp(x, lo, hi)");
-    expect(value).toContain(
-      "https://genocode-org.github.io/GenoCode/docs/language.html#181-numbers",
-    );
+    expect(value).toContain("https://genocode.piorek.co.za/docs/language.html#181-numbers");
     expect(h?.range).toEqual({
       start: { line: 2, character: 8 },
       end: { line: 2, character: 13 },
@@ -102,9 +100,7 @@ describe("hover", () => {
     const value = (hover(checkDocument(d), at(d, "follows", 2))?.contents as { value: string })
       .value;
     expect(value).toContain("follows x");
-    expect(value).toContain(
-      "https://genocode-org.github.io/GenoCode/docs/language.html#17-dance-styles",
-    );
+    expect(value).toContain("https://genocode.piorek.co.za/docs/language.html#17-dance-styles");
   });
 
   it("has nothing to say about spaces", () => {

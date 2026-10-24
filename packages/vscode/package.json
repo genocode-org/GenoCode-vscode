@@ -13,7 +13,7 @@
     "url": "https://github.com/genocode-org/GenoCode-vscode.git",
     "directory": "packages/vscode"
   },
-  "homepage": "https://genocode-org.github.io/GenoCode/",
+  "homepage": "https://genocode.piorek.co.za/",
   "bugs": "https://github.com/genocode-org/GenoCode-vscode/issues",
   "categories": [
     "Programming Languages",
