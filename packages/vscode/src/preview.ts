@@ -163,24 +163,50 @@ function page(panel: WebviewPanel, extension: Uri): string {
 <body>
 <main id="view">
   <canvas id="canvas"></canvas>
-  <p id="status"></p>
-  <div id="views" role="toolbar" aria-label="Look from">
-    <button data-side="front" title="Front">Front</button>
-    <button data-side="back" title="Back">Back</button>
-    <button data-side="left" title="Left side">Left</button>
-    <button data-side="right" title="Right side">Right</button>
-    <button data-side="top" title="Top">Top</button>
-    <button data-side="bottom" title="Bottom">Bottom</button>
+  <div id="title" class="floating">
+    <span id="name"></span>
+    <span id="status"></span>
+  </div>
+  <div id="corner">
+    <button id="camera" class="icon floating" aria-haspopup="menu" aria-expanded="false" aria-label="Look from another side" title="Look from another side">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9z"/><path d="M12 12l8-4.5M12 12v9M12 12L4 7.5"/></svg>
+    </button>
+    <div id="camera-menu" class="menu floating" role="menu" hidden>
+      <div class="menu-head">Look from</div>
+      <div class="sides">
+        <button data-side="front" role="menuitem">Front</button>
+        <button data-side="back" role="menuitem">Back</button>
+        <button data-side="top" role="menuitem">Top</button>
+        <button data-side="left" role="menuitem">Left</button>
+        <button data-side="right" role="menuitem">Right</button>
+        <button data-side="bottom" role="menuitem">Bottom</button>
+      </div>
+      <hr>
+      <button id="reset" class="item" role="menuitem" title="Frame the whole creature again">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12a8 8 0 1 0 2.3-5.7M4 4v4h4"/></svg>
+        Start the view again
+      </button>
+    </div>
+  </div>
+  <div id="bar" class="floating" hidden>
+    <label class="chip" title="The creature itself, or one of its variants">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="6" cy="12" r="3"/><circle cx="18" cy="6" r="3"/><circle cx="18" cy="18" r="3"/><path d="M9 11l6-4M9 13l6 4"/></svg>
+      <select id="variant" aria-label="Variant"></select>
+    </label>
   </div>
 </main>
 <aside id="panel">
-  <div id="bar">
-    <select id="variant" title="Which variant to show"></select>
-    <button id="reset" title="Frame the whole creature again">Reset view</button>
-  </div>
+  <h2>Genes <span id="gene-count"></span></h2>
   <p id="note" hidden></p>
   <table id="genes"></table>
-  <section id="inputs" hidden></section>
+  <section id="inputs" hidden>
+    <h2>
+      <button id="inputs-toggle" aria-expanded="false" title="Try how the creature reacts to time and music">
+        Try inputs
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
+      </button>
+    </h2>
+  </section>
 </aside>
 <script nonce="${nonce}" src="${asset("preview.js")}"></script>
 </body>
