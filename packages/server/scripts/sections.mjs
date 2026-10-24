@@ -24,7 +24,7 @@ export function sectionsSource(markdown) {
   return `// Made by scripts/sections.mjs from @genocode/core's LANGUAGE.md. Don't edit it by hand.
 
 /** The language guide on the website. */
-export const GUIDE = "https://genocode-org.github.io/GenoCode/docs/language.html";
+export const GUIDE = "https://genocode.piorek.co.za/docs/language.html";
 
 /** Each numbered section's anchor in the guide. */
 export const SECTIONS: ReadonlyMap<string, string> = new Map([
