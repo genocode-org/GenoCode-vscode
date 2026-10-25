@@ -1,5 +1,11 @@
 # Changes
 
+## 0.8.1
+
+- GenoCode 0.11: when a pattern written in GenoCode is mixed with another, the preview blurs it
+  after the mixing, as it does the built-in kinds, so both patterns are softened. Hover help and
+  the language guide follow version 0.11 of the language.
+
 ## 0.8.0
 
 - **Morph** in the preview: the bar under the creature has a Morph button that blends the
