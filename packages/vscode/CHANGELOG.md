@@ -1,5 +1,15 @@
 # Changes
 
+## 0.9.0
+
+- **Make a variant…** under the genes in the preview: once you've changed some genes since the
+  file was saved, it asks for a name and puts the new values into a new variant, setting the
+  creature's own genes back. With a variant on show, it copies that variant as it is now, and a
+  variant that was in the saved file goes back to how it was.
+- **New variant…** at the end of the variant menu makes an empty variant, for the gene controls to
+  fill in. The menu now shows for any creature with genes.
+- Uses GenoCode core 0.11.1.
+
 ## 0.8.1
 
 - GenoCode 0.11: when a pattern written in GenoCode is mixed with another, the preview blurs it
