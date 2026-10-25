@@ -319,6 +319,31 @@ button.icon:hover {
   table-layout: fixed;
 }
 
+/* Make a variant, under the genes: a button in the theme's colours. */
+#make-variant {
+  display: block;
+  width: 100%;
+  margin-top: 10px;
+  padding: 5px 10px;
+  border: 1px solid var(--vscode-button-border, transparent);
+  border-radius: 4px;
+  background: var(--vscode-button-secondaryBackground);
+  color: var(--vscode-button-secondaryForeground);
+}
+
+#make-variant:hover:not(:disabled) {
+  background: var(--vscode-button-secondaryHoverBackground);
+}
+
+#make-variant:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+#make-variant[hidden] {
+  display: none;
+}
+
 #genes td {
   padding: 5px 4px;
   vertical-align: middle;

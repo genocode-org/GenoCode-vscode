@@ -3,9 +3,11 @@
 // the new value at once; letting go writes it into the code: into the gene's line, or into the
 // variant's block while a variant is shown. The cursor in a variant's block shows that variant.
 // Morph blends the creature into each of its variants in turn (or into mutants of it), as the
-// app's Morph does.
+// app's Morph does. Make a variant turns the gene changes made since the file was saved into a
+// new variant, and New variant… in the variant menu makes an empty one.
 
 import {
+  addVariant,
   build,
   buildBackground,
   check,
@@ -15,6 +17,7 @@ import {
   morph,
   mutate,
   patternOnBall,
+  valuesEqual,
   valuesOf,
   variantEdits,
   type BuildOptions,
@@ -40,6 +43,7 @@ const genes = $<HTMLTableElement>("genes");
 const variantMenu = $<HTMLSelectElement>("variant");
 const morphButton = $<HTMLButtonElement>("morph");
 const playButton = $<HTMLButtonElement>("play");
+const makeVariantButton = $<HTMLButtonElement>("make-variant");
 const inputs = new InputControls($("inputs"), () => draw(true));
 
 /** The last text that checked without errors, what's on show, and the version it came from. */
@@ -47,6 +51,14 @@ let shown: { program: CheckResult; version: number } | undefined;
 let values = new Map<string, Value>();
 let variant = "";
 let liveFrame = 0;
+/** The file as last saved, to tell which genes have changed since; empty when never saved. */
+let saved: { text: string; program?: CheckResult } = { text: "" };
+/** What the variant name being asked for is for: a variant of the changes, or an empty one. */
+let naming: "changes" | "empty" | undefined;
+/** A variant just made, whose block the code's cursor goes to once it's on show. */
+let made: string | undefined;
+/** The variant menu's last item, which makes a new variant. Names can't start with +. */
+const NEW_VARIANT = "+new";
 /** The side the creature was last looked at from, to frame each variant from; none for the
  * usual view. */
 let side: Side | undefined;
@@ -74,11 +86,18 @@ let morphFrame = 0;
  * where the cursor has moved to. */
 type FromExtension =
   | { type: "show"; text: string; version: number; another?: boolean }
-  | { type: "cursor"; at: number; version: number };
+  | { type: "cursor"; at: number; version: number }
+  | { type: "saved"; text: string }
+  | { type: "variant-named"; name: string; version: number };
 
 window.addEventListener("message", (e: MessageEvent<FromExtension>) => {
   if (e.data.type === "show") show(e.data.text, e.data.version, e.data.another);
   if (e.data.type === "cursor") cursorMoved(e.data.at, e.data.version);
+  if (e.data.type === "saved") {
+    saved = { text: e.data.text };
+    showMakeVariant();
+  }
+  if (e.data.type === "variant-named") makeVariant(e.data.name, e.data.version);
 });
 $("reset").addEventListener("click", () => {
   side = undefined;
@@ -121,6 +140,14 @@ $("inputs-toggle").addEventListener("click", () => {
   $("inputs-toggle").setAttribute("aria-expanded", String(open));
 });
 variantMenu.addEventListener("change", () => {
+  if (variantMenu.value === NEW_VARIANT) {
+    variantMenu.value = variant;
+    askVariantName(
+      "empty",
+      "Name the new variant. It starts out as the creature itself; the genes you change then go into it.",
+    );
+    return;
+  }
   variant = variantMenu.value;
   if (!shown) return;
   choose(shown.program, true);
@@ -153,6 +180,7 @@ function cursorMoved(at: number, version: number): void {
   choose(program, true);
 }
 
+makeVariantButton.addEventListener("click", () => askVariantName("changes", variantMessage(false)));
 morphButton.addEventListener("click", () => setMorphing(!morphing));
 playButton.addEventListener("click", () => {
   playing = !playing;
@@ -181,13 +209,21 @@ function show(text: string, version: number, another = false): void {
   const first = shown === undefined;
   shown = { program, version };
   if (!program.variants.some((v) => v.name === variant)) variant = "";
+  const variantable = canHaveVariants(program);
   variantMenu.replaceChildren(
     new Option(`${program.file.name || "The creature"} itself`, ""),
     ...program.variants.map((v) => new Option(v.name, v.name)),
+    ...(variantable ? [new Option("New variant…", NEW_VARIANT)] : []),
   );
   variantMenu.value = variant;
   $("bar").hidden = false;
-  $("variant-chip").hidden = program.variants.length === 0;
+  $("variant-chip").hidden = program.variants.length === 0 && !variantable;
+  // A variant just made: the code's cursor goes into its block.
+  const fresh = program.variants.find((v) => v.name === made);
+  made = undefined;
+  if (fresh && fresh.name === variant) {
+    vscode.postMessage({ type: "reveal", version, at: fresh.decl.nameSpan.end });
+  }
   const morphable = program.genes.some((g) => g.section !== "dance");
   morphButton.disabled = !morphable;
   morphButton.title = morphable
@@ -218,6 +254,7 @@ function choose(program: CheckResult, reframe = false): void {
   note.hidden = v === undefined;
   note.textContent = `Showing ${variant}: changes are written into its block. Its own genes are marked; ↺ puts one back to the creature's value.`;
   showGenes(program);
+  showMakeVariant();
   inputs.show(program.live || program.backgroundLive);
   draw(!reframe);
 }
@@ -261,6 +298,7 @@ function setMorphing(on: boolean): void {
   morphButton.setAttribute("aria-pressed", String(on));
   $("morph-tools").hidden = !on;
   variantMenu.disabled = on;
+  makeVariantButton.disabled = on;
   genes.inert = on;
   genes.classList.toggle("morphing", on);
   cancelAnimationFrame(liveFrame);
@@ -424,4 +462,118 @@ function showGenes(program: CheckResult): void {
 function showValue(g: GeneInfo, v: Value): void {
   const cell = genes.querySelector<HTMLElement>(`tr[data-gene="${CSS.escape(g.fullName)}"] .value`);
   if (cell) cell.textContent = cell.title = formatValue(v);
+}
+
+// ---------- making variants ----------
+
+type Edit = { start: number; end: number; text: string };
+
+/** Only a creature with genes to set can have variants. */
+const canHaveVariants = (program: CheckResult) =>
+  program.file.kind === "creature" && program.genes.some((g) => g.section !== "dance");
+
+/** Asks the extension for a new variant's name, which comes back as `variant-named`. */
+function askVariantName(why: "changes" | "empty", message: string): void {
+  if (!shown || morphing) return;
+  naming = why;
+  vscode.postMessage({ type: "name-variant", version: shown.version, message });
+}
+
+/** Adds the variant just named, and shows it. */
+function makeVariant(name: string, version: number): void {
+  const why = naming;
+  naming = undefined;
+  if (!shown || shown.version !== version || why === undefined) return;
+  const program = shown.program;
+  const changes = why === "changes" ? changesSinceSaved() : { values: new Map(), putBack: [] };
+  if (!changes) return;
+  const added = addVariant(program, name, changes.values);
+  if ("error" in added) {
+    say(added.error);
+    return;
+  }
+  variant = made = name;
+  write([...added.edits, ...changes.putBack].sort((a, b) => a.start - b.start));
+}
+
+/**
+ * The gene changes made since the file was saved, as a new variant would hold them, and the edits
+ * that put back what was changed. For the creature itself, its own genes go back; for a variant,
+ * the variant goes back as it was. Undefined when nothing has changed.
+ */
+function changesSinceSaved(): { values: Map<string, Value>; putBack: Edit[] } | undefined {
+  if (!shown || saved.text === "") return undefined;
+  saved.program ??= check(saved.text);
+  const base = saved.program;
+  const p = shown.program;
+  const now = p.variants.find((v) => v.name === variant);
+  const values = valuesOf(p.genes, now?.values);
+  const was = new Map(base.genes.map((g) => [g.fullName, g]));
+  const same = (g: GeneInfo) => was.get(g.fullName)?.kind === g.kind;
+  if (!now) {
+    const changed = new Map<string, Value>();
+    const back = new Map<string, Value>();
+    for (const g of p.genes) {
+      const v = values.get(g.fullName);
+      const before = was.get(g.fullName)?.value;
+      if (!same(g) || v === undefined || before === undefined || valuesEqual(v, before)) continue;
+      changed.set(g.fullName, v);
+      back.set(g.fullName, before);
+    }
+    return changed.size > 0 ? { values: changed, putBack: geneEdits(p, back) } : undefined;
+  }
+  // A variant: the new one is a copy of it as it is now.
+  const copy = new Map<string, Value>();
+  for (const g of p.genes) {
+    const v = values.get(g.fullName);
+    if (v !== undefined && !valuesEqual(v, g.value)) copy.set(g.fullName, v);
+  }
+  const before = base.variants.find((v) => v.name === now.name);
+  // A variant made since saving is copied as it is, and left alone.
+  if (!before) return copy.size > 0 ? { values: copy, putBack: [] } : undefined;
+  const beforeValues = valuesOf(base.genes, before.values);
+  const setBack = new Map<string, Value>();
+  const unset: string[] = [];
+  for (const g of p.genes) {
+    const v = values.get(g.fullName);
+    const old = beforeValues.get(g.fullName);
+    if (!same(g) || v === undefined || old === undefined || valuesEqual(v, old)) continue;
+    const own = before.values.get(g.fullName);
+    if (own === undefined) unset.push(g.fullName);
+    else setBack.set(g.fullName, own);
+  }
+  if (setBack.size === 0 && unset.length === 0) return undefined;
+  return { values: copy, putBack: variantEdits(p, now.name, setBack, unset) };
+}
+
+/** The Make a variant button, under the genes: active once genes have changed since saving. */
+function showMakeVariant(): void {
+  makeVariantButton.hidden = !shown || !canHaveVariants(shown.program);
+  if (makeVariantButton.hidden) return;
+  const changed = changesSinceSaved() !== undefined;
+  makeVariantButton.disabled = !changed || morphing;
+  makeVariantButton.title = !changed
+    ? saved.text === ""
+      ? "Save the file first: the genes you change after that can then become a variant"
+      : "Change some genes first: their new values can then become a variant of the creature"
+    : variantMessage(true);
+}
+
+/** What Make a variant does with the changes there are: as a tooltip, or as the name box says it. */
+function variantMessage(short: boolean): string {
+  const from = shown?.program.variants.find((v) => v.name === variant)?.name;
+  const putsBack = (changesSinceSaved()?.putBack.length ?? 0) > 0;
+  if (from === undefined) {
+    return short
+      ? "Put the gene values you've changed into a new variant, and set the creature's own genes back"
+      : "Name the new variant. It gets the gene values you've changed since the file was saved, and the creature's own genes go back to how they were.";
+  }
+  if (short) {
+    return putsBack
+      ? `Copy ${from} as it is now into a new variant, and set ${from} back as it was`
+      : `Copy ${from} into a new variant`;
+  }
+  return putsBack
+    ? `Name the new variant. It's a copy of ${from} as it is now, and ${from} goes back to how it was.`
+    : `Name the new variant. It's a copy of ${from}.`;
 }
