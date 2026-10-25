@@ -2,6 +2,7 @@
 // as it's typed, with a control for each gene and sliders for time and music. The drawing happens
 // in the panel (src/webview/main.ts); this side sends it the text and writes its gene edits back.
 
+import { addVariant, check } from "@genocode/core";
 import {
   Disposable,
   Range,
@@ -21,7 +22,8 @@ import {
 type FromPanel =
   | { type: "ready" }
   | { type: "edit"; version: number; edits: { start: number; end: number; text: string }[] }
-  | { type: "reveal"; version: number; at: number };
+  | { type: "reveal"; version: number; at: number }
+  | { type: "name-variant"; version: number; message: string };
 
 const isGenie = (d: TextDocument) => d.languageId === "genocode";
 
@@ -66,6 +68,9 @@ export class Preview {
       workspace.onDidChangeTextDocument((e) => {
         if (e.document === this.document) this.sendSoon();
       }),
+      workspace.onDidSaveTextDocument((d) => {
+        if (d === this.document) void this.sendSaved();
+      }),
       window.onDidChangeActiveTextEditor((editor) => {
         if (editor && isGenie(editor.document)) this.follow(editor.document);
       }),
@@ -84,6 +89,7 @@ export class Preview {
     if (document === this.document) return;
     this.document = document;
     this.title();
+    void this.sendSaved();
     this.send(true);
   }
 
@@ -108,9 +114,56 @@ export class Preview {
     });
   }
 
+  /**
+   * Sends the file as it was last saved, which Make a variant compares gene values with. A file
+   * that has never been saved has nothing to compare with, so it's sent as empty.
+   */
+  private async sendSaved(): Promise<void> {
+    const doc = this.document;
+    let text = "";
+    if (!doc.isUntitled) {
+      try {
+        text = doc.isDirty
+          ? new TextDecoder().decode(await workspace.fs.readFile(doc.uri))
+          : doc.getText();
+      } catch {
+        // Nothing to compare with, then.
+      }
+    }
+    if (doc === this.document) void this.panel.webview.postMessage({ type: "saved", text });
+  }
+
+  /** Asks for a new variant's name, refusing ones the creature can't take, and sends it back. */
+  private async nameVariant(m: { version: number; message: string }): Promise<void> {
+    const doc = this.document;
+    if (m.version !== doc.version) return;
+    const program = check(doc.getText());
+    const name = await window.showInputBox({
+      title: "Make a variant",
+      prompt: m.message,
+      placeHolder: "A name, such as Spotty",
+      validateInput(text) {
+        if (text.trim() === "") return undefined;
+        const added = addVariant(program, text.trim(), new Map());
+        return "error" in added ? added.error : undefined;
+      },
+    });
+    if (!name?.trim() || doc !== this.document || m.version !== doc.version) return;
+    void this.panel.webview.postMessage({
+      type: "variant-named",
+      name: name.trim(),
+      version: m.version,
+    });
+  }
+
   private async receive(m: FromPanel): Promise<void> {
     if (m.type === "ready") {
+      void this.sendSaved();
       this.send();
+      return;
+    }
+    if (m.type === "name-variant") {
+      await this.nameVariant(m);
       return;
     }
     if (m.type === "reveal") {
@@ -214,6 +267,7 @@ function page(panel: WebviewPanel, extension: Uri): string {
   <h2>Genes <span id="gene-count"></span></h2>
   <p id="note" hidden></p>
   <table id="genes"></table>
+  <button id="make-variant" hidden>Make a variant…</button>
   <section id="inputs" hidden>
     <h2>
       <button id="inputs-toggle" aria-expanded="false" title="Try how the creature reacts to time and music">
