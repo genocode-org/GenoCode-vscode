@@ -84,7 +84,7 @@ export class Preview {
     if (document === this.document) return;
     this.document = document;
     this.title();
-    this.send();
+    this.send(true);
   }
 
   private title(): void {
@@ -97,12 +97,14 @@ export class Preview {
     this.pending = setTimeout(() => this.send(), 150);
   }
 
-  private send(): void {
+  /** Sends the text to show; `another` when it's a different file from the last one sent. */
+  private send(another = false): void {
     clearTimeout(this.pending);
     void this.panel.webview.postMessage({
       type: "show",
       text: this.document.getText(),
       version: this.document.version,
+      another,
     });
   }
 
@@ -189,7 +191,20 @@ function page(panel: WebviewPanel, extension: Uri): string {
     </div>
   </div>
   <div id="bar" class="floating" hidden>
-    <label class="chip" title="The creature itself, or one of its variants">
+    <button id="morph" class="chip" aria-pressed="false" title="Blend the creature into each of its variants in turn, or into mutants of it when it has none">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12c3-6 5-6 8 0s5 6 8 0"/><circle cx="4" cy="12" r="1.5"/><circle cx="20" cy="12" r="1.5"/></svg>
+      Morph
+    </button>
+    <span id="morph-tools" hidden>
+      <button id="play" class="icon" data-state="pause" aria-label="Pause" title="Pause">
+        <svg class="pause" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6v12M15 6v12"/></svg>
+        <svg class="play" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5l11 7-11 7z"/></svg>
+      </button>
+      <label class="chip" title="Seconds from one creature to the next">
+        <input id="speed" type="range" min="1" max="10" step="0.5" value="3" aria-label="Seconds from one creature to the next">
+      </label>
+    </span>
+    <label id="variant-chip" class="chip" title="The creature itself, or one of its variants">
       <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="6" cy="12" r="3"/><circle cx="18" cy="6" r="3"/><circle cx="18" cy="18" r="3"/><path d="M9 11l6-4M9 13l6 4"/></svg>
       <select id="variant" aria-label="Variant"></select>
     </label>

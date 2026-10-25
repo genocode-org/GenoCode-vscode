@@ -2,6 +2,8 @@
 // draws it with @genocode/render, as the GenoCode app's View does. Moving a gene's control shows
 // the new value at once; letting go writes it into the code: into the gene's line, or into the
 // variant's block while a variant is shown. The cursor in a variant's block shows that variant.
+// Morph blends the creature into each of its variants in turn (or into mutants of it), as the
+// app's Morph does.
 
 import {
   build,
@@ -10,9 +12,12 @@ import {
   formatValue,
   geneEdits,
   geneRange,
+  morph,
+  mutate,
   patternOnBall,
   valuesOf,
   variantEdits,
+  type BuildOptions,
   type CheckResult,
   type GeneInfo,
   type Value,
@@ -33,6 +38,8 @@ const status = $("status");
 const note = $("note");
 const genes = $<HTMLTableElement>("genes");
 const variantMenu = $<HTMLSelectElement>("variant");
+const morphButton = $<HTMLButtonElement>("morph");
+const playButton = $<HTMLButtonElement>("play");
 const inputs = new InputControls($("inputs"), () => draw(true));
 
 /** The last text that checked without errors, what's on show, and the version it came from. */
@@ -44,12 +51,33 @@ let liveFrame = 0;
  * usual view. */
 let side: Side | undefined;
 
-/** What the extension sends: the text to show, or where the cursor has moved to. */
+/** One creature of the morph loop: the creature itself, a variant or a mutant. */
+interface Member {
+  label: string;
+  values: Map<string, Value>;
+}
+let morphing = false;
+let members: Member[] = [];
+/** Mutants, made once each time Morph starts, so editing the code doesn't make new ones. */
+let mutants: Map<string, Value>[] = [];
+/** Where the loop is, from 0 up to 1 and round again. */
+let position = 0;
+let playing = true;
+/** Seconds from one creature to the next. */
+let secondsEach = 3;
+let started = 0;
+let last = 0;
+let lastPanel = 0;
+let morphFrame = 0;
+
+/** What the extension sends: the text to show (`another` when it's from a different file), or
+ * where the cursor has moved to. */
 type FromExtension =
-  { type: "show"; text: string; version: number } | { type: "cursor"; at: number; version: number };
+  | { type: "show"; text: string; version: number; another?: boolean }
+  | { type: "cursor"; at: number; version: number };
 
 window.addEventListener("message", (e: MessageEvent<FromExtension>) => {
-  if (e.data.type === "show") show(e.data.text, e.data.version);
+  if (e.data.type === "show") show(e.data.text, e.data.version, e.data.another);
   if (e.data.type === "cursor") cursorMoved(e.data.at, e.data.version);
 });
 $("reset").addEventListener("click", () => {
@@ -110,7 +138,7 @@ variantMenu.addEventListener("change", () => {
  * Anywhere else, what's on show stays, so the drawing code can be changed while a variant is shown.
  */
 function cursorMoved(at: number, version: number): void {
-  if (!shown || shown.version !== version) return;
+  if (!shown || shown.version !== version || morphing) return;
   const { program } = shown;
   const inside = (span: { start: number; end: number }) => span.start <= at && at <= span.end;
   const found = program.variants.find((v) => inside(v.decl.span));
@@ -124,9 +152,21 @@ function cursorMoved(at: number, version: number): void {
   variantMenu.value = variant;
   choose(program, true);
 }
+
+morphButton.addEventListener("click", () => setMorphing(!morphing));
+playButton.addEventListener("click", () => {
+  playing = !playing;
+  playButton.dataset["state"] = playing ? "pause" : "play";
+  playButton.setAttribute("aria-label", playing ? "Pause" : "Play");
+  playButton.title = playing ? "Pause" : "Play";
+});
+$<HTMLInputElement>("speed").addEventListener("input", (e) => {
+  secondsEach = Number((e.target as HTMLInputElement).value);
+});
+
 vscode.postMessage({ type: "ready" });
 
-function show(text: string, version: number): void {
+function show(text: string, version: number, another = false): void {
   const program = check(text);
   const errors = program.diagnostics.filter((d) => d.severity === "error").length;
   if (!program.ok || program.file.kind === "dance") {
@@ -146,8 +186,25 @@ function show(text: string, version: number): void {
     ...program.variants.map((v) => new Option(v.name, v.name)),
   );
   variantMenu.value = variant;
-  $("bar").hidden = program.variants.length === 0;
-  choose(program, first);
+  $("bar").hidden = false;
+  $("variant-chip").hidden = program.variants.length === 0;
+  const morphable = program.genes.some((g) => g.section !== "dance");
+  morphButton.disabled = !morphable;
+  morphButton.title = morphable
+    ? "Blend the creature into each of its variants in turn, or into mutants of it when it has none"
+    : "This has no genes, so there's nothing to morph";
+  if (morphing && morphable && !another) {
+    // The loop carries on where it was, with the new code.
+    members = loopMembers(program);
+    inputs.show(program.live || program.backgroundLive);
+    showGenes(program);
+    return;
+  }
+  // Another file starts its own loop, from its first creature.
+  const restart = morphing && morphable;
+  if (morphing) setMorphing(false);
+  else choose(program, first);
+  if (restart) setMorphing(true);
 }
 
 /**
@@ -168,10 +225,23 @@ function choose(program: CheckResult, reframe = false): void {
 /** Draws the creature; creatures that read time are drawn again every frame while it runs. */
 function draw(keepView: boolean): void {
   cancelAnimationFrame(liveFrame);
-  if (!shown) return;
+  if (!shown || morphing) return;
   const { program } = shown;
   const { kind } = program.file;
-  const options = { genes: values, inputs: inputs.now() ?? {} };
+  const built = paint(program, inputs.now() ?? {}, keepView);
+  const problem = built.diagnostics[0];
+  if (problem) say(problem.message);
+  else if (kind === "background") say("A background.");
+  else if (kind === "pattern") say("A pattern, on a ball.");
+  else say(`${built.shapes.length} shape${built.shapes.length === 1 ? "" : "s"}`);
+  const live = program.live || program.backgroundLive;
+  if (live && inputs.running) liveFrame = requestAnimationFrame(() => draw(true));
+}
+
+/** Builds what's on show with the current values and puts it on the canvas. */
+function paint(program: CheckResult, now: NonNullable<BuildOptions["inputs"]>, keepView: boolean) {
+  const { kind } = program.file;
+  const options = { genes: values, inputs: now };
   const built =
     kind === "creature"
       ? build(program, options)
@@ -181,13 +251,81 @@ function draw(keepView: boolean): void {
   view.setCreature(built.shapes, keepView);
   if (!keepView && side) view.viewFrom(side);
   view.setBackground(kind === "pattern" ? undefined : buildBackground(program, options).fill);
-  const problem = built.diagnostics[0];
-  if (problem) say(problem.message);
-  else if (kind === "background") say("A background.");
-  else if (kind === "pattern") say("A pattern, on a ball.");
-  else say(`${built.shapes.length} shape${built.shapes.length === 1 ? "" : "s"}`);
-  const live = program.live || program.backgroundLive;
-  if (live && inputs.running) liveFrame = requestAnimationFrame(() => draw(true));
+  return built;
+}
+
+/** Starts or stops morphing. Stopping shows the creature, or the chosen variant, again. */
+function setMorphing(on: boolean): void {
+  if (!shown || on === morphing) return;
+  morphing = on;
+  morphButton.setAttribute("aria-pressed", String(on));
+  $("morph-tools").hidden = !on;
+  variantMenu.disabled = on;
+  genes.inert = on;
+  genes.classList.toggle("morphing", on);
+  cancelAnimationFrame(liveFrame);
+  cancelAnimationFrame(morphFrame);
+  if (!on) {
+    choose(shown.program, false);
+    return;
+  }
+  note.hidden = true;
+  $("name").textContent = shown.program.file.name || "Untitled";
+  mutants = [];
+  members = loopMembers(shown.program);
+  position = 0;
+  started = last = lastPanel = performance.now();
+  morphStep(true);
+}
+
+/**
+ * The creatures to morph through: the creature itself, then each variant in the order they're
+ * written. A creature without variants morphs through mutants of itself, as in the app.
+ */
+function loopMembers(program: CheckResult): Member[] {
+  const family: Member[] = [
+    { label: program.file.name || "The creature", values: valuesOf(program.genes) },
+    ...program.variants.map((v) => ({ label: v.name, values: valuesOf(program.genes, v.values) })),
+  ];
+  if (family.length > 1) return family;
+  if (mutants.length === 0) {
+    for (let i = 0; i < 5; i++) {
+      mutants.push(
+        mutate(program.genes, family[0]!.values, { strength: 0.25, random: Math.random }),
+      );
+    }
+  }
+  return [
+    ...family,
+    ...mutants.map((m, i) => ({ label: `Mutant ${i + 1}`, values: valuesOf(program.genes, m) })),
+  ];
+}
+
+/** One frame of the morph: the in-between creature where the loop has got to. */
+function morphStep(first = false): void {
+  if (!shown || !morphing) return;
+  const { program } = shown;
+  const now = performance.now();
+  const n = members.length;
+  if (playing && !first) position += (now - last) / 1000 / (secondsEach * n);
+  last = now;
+  const x = (((position % 1) + 1) % 1) * n;
+  const index = Math.min(Math.floor(x), n - 1);
+  const a = members[index]!;
+  const b = members[(index + 1) % n]!;
+  values = morph(
+    { genes: program.genes, values: a.values },
+    { genes: program.genes, values: b.values },
+    x - index,
+  ).values;
+  const built = paint(program, inputs.now() ?? { time: (now - started) / 1000 }, !first);
+  if (first || now - lastPanel >= 200) {
+    lastPanel = now;
+    showGenes(program);
+    const problem = built.diagnostics[0];
+    say(problem ? problem.message : `${a.label} → ${b.label} · ${index + 1} of ${n}`);
+  }
+  morphFrame = requestAnimationFrame(() => morphStep());
 }
 
 let ball: { text: string; program: CheckResult } | undefined;
@@ -231,7 +369,7 @@ const editing: GeneEditing = {
 /** The genes, grouped by where they're declared, each with a control and its value. */
 function showGenes(program: CheckResult): void {
   // A variant's own genes stand out; the rest are the creature's.
-  const own = program.variants.find((v) => v.name === variant)?.values;
+  const own = morphing ? undefined : program.variants.find((v) => v.name === variant)?.values;
   const rows: HTMLTableRowElement[] = [];
   let group: string | undefined;
   for (const g of program.genes) {

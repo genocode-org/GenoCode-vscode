@@ -183,14 +183,68 @@ button.icon:hover {
   background: var(--hover);
 }
 
-/* The variant, in a bar floating at the bottom of the creature. */
+/* Morph and the variant, in a bar floating at the bottom of the creature. */
 #bar {
   position: absolute;
   left: 50%;
   bottom: 14px;
   transform: translateX(-50%);
   max-width: calc(100% - 24px);
+  display: flex;
+  align-items: center;
+  gap: 2px;
   padding: 4px;
+}
+
+#bar [hidden] {
+  display: none;
+}
+
+#morph {
+  border: none;
+  background: none;
+  color: var(--vscode-foreground);
+  white-space: nowrap;
+}
+
+#morph[aria-pressed="true"] {
+  color: var(--vscode-button-foreground);
+  background: var(--vscode-button-background);
+}
+
+#morph[aria-pressed="true"]:hover {
+  background: var(--vscode-button-hoverBackground);
+}
+
+#morph-tools {
+  display: flex;
+  align-items: center;
+}
+
+#play {
+  width: 30px;
+  height: 30px;
+  border: none;
+  border-radius: 7px;
+  background: none;
+}
+
+#play:hover {
+  background: var(--hover);
+}
+
+#play[data-state="pause"] .play,
+#play[data-state="play"] .pause {
+  display: none;
+}
+
+#speed {
+  width: 90px;
+}
+
+.chip select:disabled {
+  cursor: default;
+  opacity: 0.6;
 }
 
 .chip {
@@ -298,6 +352,11 @@ button.icon:hover {
 #genes tr.inherited td.name,
 #genes tr.inherited td.value {
   opacity: 0.6;
+}
+
+/* While morphing the genes show the values going by, and can't be changed. */
+#genes.morphing td:nth-child(2) {
+  opacity: 0.55;
 }
 
 #genes button.reset {

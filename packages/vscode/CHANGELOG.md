@@ -1,5 +1,13 @@
 # Changes
 
+## 0.8.0
+
+- **Morph** in the preview: the bar under the creature has a Morph button that blends the
+  creature into each of its variants in turn, the way the GenoCode app's Morph does. A creature
+  without variants morphs through five mutants of itself. Play/Pause and a slider set how many
+  seconds each blend takes. The genes show their values as they change, and can be edited again
+  once Morph is off. Editing the code while it morphs carries on from the same place.
+
 ## 0.7.0
 
 - The preview has the GenoCode app's new look, in your theme's colours. The creature fills its
