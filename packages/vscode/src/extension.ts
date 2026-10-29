@@ -1,6 +1,6 @@
-// The VS Code extension: starts the GenoCode language server for .genie files, and opens the live
-// preview. Colours come from the grammar, and everything else (errors, hover help, completion,
-// outline, formatting) from the server.
+// The VS Code extension: starts the GenoCode language server for .genie files, opens the live
+// preview and single-spaces pasted code. Colours come from the grammar, and everything else (errors,
+// hover help, completion, outline, formatting) from the server.
 
 import { commands, window, type ExtensionContext } from "vscode";
 import {
@@ -9,6 +9,7 @@ import {
   type LanguageClientOptions,
   type ServerOptions,
 } from "vscode-languageclient/node";
+import { registerPaste } from "./paste.js";
 import { Preview } from "./preview.js";
 
 let client: LanguageClient | undefined;
@@ -19,6 +20,7 @@ export async function activate(context: ExtensionContext): Promise<void> {
       const editor = window.activeTextEditor;
       if (editor?.document.languageId === "genocode") Preview.show(context, editor.document);
     }),
+    registerPaste(),
   );
 
   const module = context.asAbsolutePath("dist/server.cjs");
