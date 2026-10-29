@@ -1,5 +1,12 @@
 # Changes
 
+## 0.10.0
+
+- **Paste** into a `.genie` file puts one space between things, as in the GenoCode app:
+  indentation, strings and comments stay as they are. The paste widget's **Paste as text** gives
+  back exactly what was copied.
+- Needs VS Code 1.97 or later.
+
 ## 0.9.1
 
 - **Format Document** puts one space between things: genes, variant settings and dance lines are
