@@ -3,7 +3,7 @@
   "displayName": "GenoCode",
   "version": "0.10.0",
   "private": true,
-  "description": "GenoCode creatures in VS Code: a live 3D preview, highlighting, errors as you type, help on hover, completion, rename, colour pickers, outline and formatting for .genie files.",
+  "description": "Grow generative art creatures in VS Code: a live 3D preview, highlighting, errors as you type, help on hover, completion, rename, colour pickers, outline and formatting for .genie files.",
   "publisher": "genocode",
   "license": "MIT",
   "type": "module",
@@ -24,7 +24,11 @@
     "genie",
     "creatures",
     "generative art",
-    "turtle"
+    "turtle",
+    "creative coding",
+    "creative-coding",
+    "3d",
+    "procedural"
   ],
   "engines": {
     "vscode": "^1.97.0"
