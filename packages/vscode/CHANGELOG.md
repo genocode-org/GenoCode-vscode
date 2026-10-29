@@ -1,5 +1,14 @@
 # Changes
 
+## 0.9.1
+
+- **Format Document** puts one space between things: genes, variant settings and dance lines are
+  no longer lined up in columns, and a comment at the end of a line sits one space after the code.
+  Spaces you type yourself are left as they are until you format.
+- The preview frames a creature again when it grows round the camera, such as a big creature
+  pasted over a small one, instead of showing nothing.
+- Uses GenoCode core 0.11.3 and render 0.13.1.
+
 ## 0.9.0
 
 - **Make a variant…** under the genes in the preview: once you've changed some genes since the
