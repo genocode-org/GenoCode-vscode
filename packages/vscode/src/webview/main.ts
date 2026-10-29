@@ -256,11 +256,12 @@ function choose(program: CheckResult, reframe = false): void {
   showGenes(program);
   showMakeVariant();
   inputs.show(program.live || program.backgroundLive);
-  draw(!reframe);
+  // A change that grows the creature round the camera frames it afresh.
+  draw(reframe ? false : "unless-inside");
 }
 
 /** Draws the creature; creatures that read time are drawn again every frame while it runs. */
-function draw(keepView: boolean): void {
+function draw(keepView: boolean | "unless-inside"): void {
   cancelAnimationFrame(liveFrame);
   if (!shown || morphing) return;
   const { program } = shown;
@@ -276,7 +277,11 @@ function draw(keepView: boolean): void {
 }
 
 /** Builds what's on show with the current values and puts it on the canvas. */
-function paint(program: CheckResult, now: NonNullable<BuildOptions["inputs"]>, keepView: boolean) {
+function paint(
+  program: CheckResult,
+  now: NonNullable<BuildOptions["inputs"]>,
+  keepView: boolean | "unless-inside",
+) {
   const { kind } = program.file;
   const options = { genes: values, inputs: now };
   const built =
@@ -388,12 +393,12 @@ const editing: GeneEditing = {
   input(g, v) {
     values.set(g.fullName, v);
     showValue(g, v);
-    draw(true);
+    draw("unless-inside");
   },
   change(g, v) {
     values.set(g.fullName, v);
     showValue(g, v);
-    draw(true);
+    draw("unless-inside");
     if (!shown) return;
     const changed = new Map([[g.fullName, v]]);
     write(
