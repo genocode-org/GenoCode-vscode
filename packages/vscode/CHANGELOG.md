@@ -1,5 +1,10 @@
 # Changes
 
+## 0.10.1
+
+- The Marketplace page says what GenoCode is for: growing generative art creatures. New tags for
+  creative coding, 3D and procedural art.
+
 ## 0.10.0
 
 - **Paste** into a `.genie` file puts one space between things, as in the GenoCode app:
