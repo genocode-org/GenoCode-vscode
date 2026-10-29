@@ -99,9 +99,9 @@
   },
   "devDependencies": {
     "@genocode/controls": "0.4.0",
-    "@genocode/core": "0.11.1",
+    "@genocode/core": "0.11.3",
     "@genocode/language-server": "0.0.0",
-    "@genocode/render": "0.12.0",
+    "@genocode/render": "0.13.1",
     "@types/vscode": "1.91.0",
     "@vscode/vsce": "4.0.0",
     "esbuild": "0.28.2",

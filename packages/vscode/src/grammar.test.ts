@@ -63,7 +63,7 @@ describe("the grammar", () => {
       ["part", "storage.type"],
       ["whorl", "entity.name.function"],
     ]);
-    const gene = colours("gene petals = 7 in 3..16 step 1  // how many");
+    const gene = colours("gene petals = 7 in 3..16 step 1 // how many");
     expect(gene).toEqual([
       ["gene", "storage.type"],
       ["petals", "variable.other.constant.gene"],
@@ -107,11 +107,11 @@ describe("the grammar", () => {
   });
 
   it("colours dance effect lines", () => {
-    const line = "  spin follows music.bass_hit  from 45 to 170  smooth 0.4";
+    const line = "  spin follows music.bass_hit from 45 to 170 smooth 0.4";
     expect(scopeOf(line, "spin")).toBe("keyword.other.effect");
     expect(scopeOf(line, "follows")).toBe("keyword.other.setting");
     expect(scopeOf(line, "smooth")).toBe("keyword.other.setting");
-    expect(scopeOf("  turn on music.mid changes  by 1", "changes")).toBe("keyword.other.trigger");
+    expect(scopeOf("  turn on music.mid changes by 1", "changes")).toBe("keyword.other.trigger");
     // Elsewhere these are ordinary names.
     expect(scopeOf("let spin = 1", "spin")).toBe("variable.other.declaration");
   });
