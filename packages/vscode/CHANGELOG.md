@@ -1,5 +1,12 @@
 # Changes
 
+## 0.10.2
+
+- The preview keeps the camera where it is while morphing. A member that grows a very big shape,
+  such as Star's member_11, no longer leaves the rest of the morph zoomed out. Changing the code or
+  a gene so that the creature grows round the camera still frames it afresh.
+- Uses GenoCode render 0.13.2.
+
 ## 0.10.1
 
 - The Marketplace page says what GenoCode is for: growing generative art creatures. New tags for
