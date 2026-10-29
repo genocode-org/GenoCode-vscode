@@ -27,7 +27,7 @@ import {
 const FLOWER = `creature Flower
 // Petals round a centre.
 
-gene rings = 3 in 1..6 step 1  // how many rings of petals
+gene rings = 3 in 1..6 step 1 // how many rings of petals
 
 /* A block comment
    over two lines. */
@@ -50,7 +50,7 @@ background {
 }
 
 dance {
-  spin follows music.bass  from 45 to 170
+  spin follows music.bass from 45 to 170
 }
 `;
 
