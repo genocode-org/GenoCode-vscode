@@ -34,6 +34,7 @@ export const KEYWORD_GROUPS = {
   "keyword.other.command": [
     "branch",
     "lay",
+    "focuspoint",
     "reshape",
     "symmetric",
     "shape",
