@@ -1,5 +1,12 @@
 # Changes
 
+## 0.11.0
+
+- New statement **`focuspoint`**: marks where the turtle is as the creature's middle. The preview's
+  camera looks at it, and it's coloured like `lay` and `reshape`. Hover help links to the new
+  section 11.8 of the language guide.
+- Uses GenoCode core 0.11.4 and render 0.13.3.
+
 ## 0.10.2
 
 - The preview keeps the camera where it is while morphing. A member that grows a very big shape,
