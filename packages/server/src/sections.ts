@@ -32,6 +32,7 @@ export const SECTIONS: ReadonlyMap<string, string> = new Map([
   ["11.5", "115-branches"],
   ["11.6", "116-symmetry"],
   ["11.7", "117-the-shape-transform"],
+  ["11.8", "118-the-focus-point"],
   ["12", "12-shapes"],
   ["13", "13-colour-and-material"],
   ["13.1", "131-colours"],

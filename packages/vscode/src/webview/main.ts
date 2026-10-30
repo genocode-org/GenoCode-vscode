@@ -289,8 +289,8 @@ function paint(
       ? build(program, options)
       : kind === "pattern"
         ? build(ballWearing(program), options)
-        : { shapes: [], diagnostics: [] };
-  view.setCreature(built.shapes, keepView);
+        : { shapes: [], diagnostics: [], focus: undefined };
+  view.setCreature(built.shapes, keepView, built.focus);
   if (!keepView && side) view.viewFrom(side);
   view.setBackground(kind === "pattern" ? undefined : buildBackground(program, options).fill);
   return built;
