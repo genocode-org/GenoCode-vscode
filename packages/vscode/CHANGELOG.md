@@ -1,5 +1,14 @@
 # Changes
 
+## 0.12.0
+
+- New statement **`stroke { … }`**: draws one smooth tube instead of separate shapes. Each `lay`
+  inside adds a point the tube passes through, as wide as the shape would have been, and its
+  colour blends smoothly along it. The preview draws strokes, the word is coloured like `lay` and
+  `reshape`, and hover help links to section 12.1 of the language guide.
+- Hover help can link to section 11.9 of the language guide, common surprises.
+- Uses GenoCode core 0.11.5 and render 0.13.4.
+
 ## 0.11.0
 
 - New statement **`focuspoint`**: marks where the turtle is as the creature's middle. The preview's
