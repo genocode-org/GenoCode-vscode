@@ -36,6 +36,7 @@ export const KEYWORD_GROUPS = {
     "lay",
     "focuspoint",
     "reshape",
+    "stroke",
     "symmetric",
     "shape",
     "colour",
