@@ -66,7 +66,7 @@ export const KEYWORD_GROUPS = {
 /** The words of a dance block's effect lines (section 17). */
 const EFFECTS = ["morph", "zoom", "spin", "turn", "reverse", "flat"];
 const EFFECT_WORDS = ["follows", "speed", "settle", "amount", "smooth", "on", "off"];
-const TRIGGER_WORDS = ["changes", "drops", "rises"];
+const TRIGGER_WORDS = ["changes", "drops", "rises", "upright"];
 
 /** Pattern code's words (section 14.1). They aren't keywords, so creatures can still use them as
  * names: `value` is coloured only where it begins a statement, and `picture` only before `{`. */
