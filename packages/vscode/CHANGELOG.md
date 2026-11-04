@@ -1,5 +1,14 @@
 # Changes
 
+## 0.13.0
+
+- New word **`upright`** for a dance's `spin` line: `spin follows x … upright` keeps the creature
+  the right way up, turning only round its up axis, so a tree or a building never tips over. It's
+  coloured like `drops` and `rises`, and hover help explains it.
+- Creatures build about a third faster, so the preview moves more smoothly for creatures that
+  change with time or music.
+- Uses GenoCode core 0.11.6.
+
 ## 0.12.0
 
 - New statement **`stroke { … }`**: draws one smooth tube instead of separate shapes. Each `lay`
