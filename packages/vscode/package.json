@@ -103,7 +103,7 @@
   },
   "devDependencies": {
     "@genocode/controls": "0.4.0",
-    "@genocode/core": "0.11.5",
+    "@genocode/core": "0.11.6",
     "@genocode/language-server": "0.0.0",
     "@genocode/render": "0.13.4",
     "@types/vscode": "1.97.0",
