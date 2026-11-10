@@ -1,5 +1,13 @@
 # Changes
 
+## 0.13.1
+
+- The preview builds strokes about four times faster, on the graphics card, so creatures with
+  strokes move more smoothly.
+- Pattern code is checked more strictly before it runs, so a shared creature can't run anything
+  but its own pattern.
+- Uses GenoCode core 0.11.7 and render 0.13.5.
+
 ## 0.13.0
 
 - New word **`upright`** for a dance's `spin` line: `spin follows x … upright` keeps the creature

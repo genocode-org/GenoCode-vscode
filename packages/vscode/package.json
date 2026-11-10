@@ -1,7 +1,7 @@
 {
   "name": "genocode",
   "displayName": "GenoCode",
-  "version": "0.13.0",
+  "version": "0.13.1",
   "private": true,
   "description": "Grow generative art creatures in VS Code: a live 3D preview, highlighting, errors as you type, help on hover, completion, rename, colour pickers, outline and formatting for .genie files.",
   "publisher": "genocode",
@@ -103,9 +103,9 @@
   },
   "devDependencies": {
     "@genocode/controls": "0.4.0",
-    "@genocode/core": "0.11.6",
+    "@genocode/core": "0.11.7",
     "@genocode/language-server": "0.0.0",
-    "@genocode/render": "0.13.4",
+    "@genocode/render": "0.13.5",
     "@types/vscode": "1.97.0",
     "@vscode/vsce": "4.0.0",
     "esbuild": "0.28.2",
