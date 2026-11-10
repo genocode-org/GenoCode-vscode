@@ -1,5 +1,11 @@
 # Changes
 
+## 0.13.2
+
+- The preview takes less time to show each new build, so morphing is smoother, most of all for
+  creatures with many shapes or many textures.
+- Uses GenoCode render 0.13.6.
+
 ## 0.13.1
 
 - The preview builds strokes about four times faster, on the graphics card, so creatures with
