@@ -1,5 +1,10 @@
 # Changes
 
+## 0.14.1
+
+- The preview's "Try inputs" shows every name whole: the longer ones, such as `music.bass_hit`,
+  were cut off and ran under their sliders.
+
 ## 0.14.0
 
 - Creatures can hear much more of the music. Fourteen new `music` values join the loudness and
