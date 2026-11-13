@@ -1,5 +1,17 @@
 # Changes
 
+## 0.14.0
+
+- Creatures can hear much more of the music. Fourteen new `music` values join the loudness and
+  hits, each with hover help and completion after `music.`:
+  - its mood: `tempo`, `energy`, `bright` and `rough`;
+  - its notes: `note` and `key` (hues, to use straight in a colour, as in
+    `colour hsv(music.note, 1, 1)`), `clear`, `major` and `pitch`;
+  - where the song is going: `quiet`, `build`, `drop` and `change`;
+  - `balance`, the side the sound comes from.
+- The preview's "Try inputs" sliders cover each new value over its own range.
+- Uses GenoCode core 0.11.8 and controls 0.4.1.
+
 ## 0.13.2
 
 - The preview takes less time to show each new build, so morphing is smoother, most of all for
