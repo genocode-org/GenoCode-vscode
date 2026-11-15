@@ -1,5 +1,13 @@
 # Changes
 
+## 0.14.2
+
+- Two new `music` values follow the singing, with hover help and completion after `music.`:
+  `words` rises while a line of the song is being sung, and `chorus` while a line the song keeps
+  coming back to is sung. The GenoCode app works them out from the song's timed words; in the
+  preview, try them with their "Try inputs" sliders.
+- Uses GenoCode core 0.11.9.
+
 ## 0.14.1
 
 - The preview's "Try inputs" shows every name whole: the longer ones, such as `music.bass_hit`,
