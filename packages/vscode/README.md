@@ -11,7 +11,9 @@ dance to music. Creature files end in `.genie`.
   when you let go, a menu of its variants, and sliders for time and music. **Make a variant…**
   turns the genes you've changed since saving into a new variant, and **New variant…** in the
   menu starts an empty one. **Morph** blends the creature into each of its variants in turn (or
-  into mutants of it). A pattern file is shown as a ball wearing it.
+  into mutants of it). The preview follows the cursor: inside a variant's block it shows that
+  variant. Buttons turn it to the front, back, sides, top or bottom. A pattern file is shown as a
+  ball wearing it.
 - **Colours** for keywords, genes, parts, built-in functions, colour names, numbers and comments.
 - **Errors as you type**, with the same checker the GenoCode app uses.
 - **Help on hover** for every keyword, built-in, gene and part, with a link to its section of the
@@ -32,9 +34,12 @@ To breed and dance your creature, open it in the
 
 ## Other editors
 
-The editor support is a language server, `genie-language-server`, so any editor that speaks the
-Language Server Protocol can use it. See
-[GenoCode-vscode](https://github.com/genocode-org/GenoCode-vscode).
+The extension is also on [Open VSX](https://open-vsx.org/extension/genocode/genocode), for
+VSCodium and other editors built on VS Code. The errors, hover help, completion, formatting and
+the rest come from a language server, so any editor that speaks the Language Server Protocol
+can use them too: see
+[GenoCode-vscode](https://github.com/genocode-org/GenoCode-vscode#other-editors) for how to build
+and run it.
 
 ## License
 
