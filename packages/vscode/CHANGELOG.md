@@ -1,5 +1,11 @@
 # Changes
 
+## 0.14.3
+
+- The Marketplace page mentions more of what the preview does: it follows the cursor into a
+  variant's block, and has buttons to turn the creature to any side. It also points VSCodium users
+  to Open VSX and says how other editors can use the language server.
+
 ## 0.14.2
 
 - Two new `music` values follow the singing, with hover help and completion after `music.`:
