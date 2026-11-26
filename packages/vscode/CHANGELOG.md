@@ -1,5 +1,10 @@
 # Changes
 
+## 0.14.4
+
+- The Marketplace page mentions tidy pasting: code pasted into a `.genie` file comes in with one
+  space between things, and the paste menu still offers the text as it was copied.
+
 ## 0.14.3
 
 - The Marketplace page mentions more of what the preview does: it follows the cursor into a
