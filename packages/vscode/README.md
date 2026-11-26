@@ -28,6 +28,8 @@ dance to music. Creature files end in `.genie`.
 - **Outline** of the creature's genes, parts, functions, patterns, variants, background and
   dance, for the Outline view, breadcrumbs and Go to Symbol.
 - **Folding** of blocks and long comments.
+- **Tidy pasting:** code pasted into a `.genie` file comes in with one space between things. The
+  paste menu still offers the text as it was copied.
 
 To breed and dance your creature, open it in the
 [GenoCode app](https://genocode.piorek.co.za/app/), or render it with the [`genie` command line](https://github.com/genocode-org/GenoCode-cli).

@@ -3,8 +3,9 @@
 # GenoCode-vscode
 
 The VS Code extension and language server for [GenoCode](https://github.com/genocode-org/GenoCode):
-colours, errors as you type, help on hover, completion, outline, folding and formatting for `.genie`
-files. Both are built on [`@genocode/core`](https://www.npmjs.com/package/@genocode/core), the same
+colours, errors as you type, help on hover, completion, go to definition, find references, rename,
+colour swatches and a colour picker, outline, folding and formatting for `.genie` files, and a live
+3D preview. Both are built on [`@genocode/core`](https://www.npmjs.com/package/@genocode/core), the same
 parser, checker and formatter the web app uses.
 
 | Package                              | What it is                                                                          |
